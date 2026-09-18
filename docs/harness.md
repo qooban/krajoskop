@@ -313,6 +313,12 @@ happily but sits outside typescript-eslint's supported peer range, which would
 cost the type-aware linting above. Revisit once typescript-eslint supports 7 —
 the gain is a much faster `typecheck`.
 
+**The package manager is pinned too.** `packageManager` in `package.json`
+carries the exact pnpm version and its integrity hash, so corepack resolves
+the same one locally and on a runner. Without it the first CI run failed at
+setup: this container happens to have pnpm preinstalled, a runner does not.
+The general lesson is the one in H-08.
+
 **No runner dependency for tooling scripts.** Node 22 strips types natively, so
 `tools/*.ts` runs under plain `node`, with no `tsx` or `ts-node` in the
 dependency list.
@@ -359,6 +365,12 @@ heavy downloads and tool-dependent tests confined to CI.
 
 **H-06 — Conventions written for the agent rather than for a person.**
 Mitigated by the one-screen rule for `CLAUDE.md`.
+
+**H-08 — Local environment flattering the build.** A check that passes here
+because this container happens to provide something is not a passing check.
+The first CI run proved it: pnpm was preinstalled locally and absent on the
+runner. Mitigated by pinning runtime and package manager versions in the
+repository, and by treating CI rather than a local run as the verdict.
 
 **H-07 — Hand-written numerics accumulating.** The cost accepted in ADR 0002.
 Mitigated by golden-file and property-based tests, and by the 2000-line

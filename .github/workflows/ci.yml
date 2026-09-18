@@ -39,6 +39,8 @@ jobs:
         run: pnpm run typecheck
       - name: Tests
         run: pnpm run test
+      - name: Workflow action pinning
+        run: node tools/check-workflows.ts
 
   docs:
     name: Documentation links

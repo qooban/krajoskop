@@ -1,0 +1,53 @@
+name: Defect
+description: A wrong number, a wrong result, or a crash
+title: '[defect] '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Most defects here are plausible wrong numbers rather than crashes, so
+        the input and the two values matter more than a stack trace.
+
+  - type: textarea
+    id: input
+    attributes:
+      label: Input
+      description: Route, data source, and any parameters. Attach the GPX or KML if it is not already in data/sample/.
+    validations:
+      required: true
+
+  - type: input
+    id: expected
+    attributes:
+      label: Expected value
+      description: With units, and where the expectation comes from.
+      placeholder: 5 h 40 min, from the recorded track
+    validations:
+      required: true
+
+  - type: input
+    id: actual
+    attributes:
+      label: Actual value
+      description: With units.
+      placeholder: 4 h 05 min
+    validations:
+      required: true
+
+  - type: input
+    id: model-version
+    attributes:
+      label: Version
+      description: Release tag or commit SHA the result came from.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suspicion
+    attributes:
+      label: What you suspect
+      description: >
+        Optional, but the usual culprits are worth ruling out first: coordinate
+        reference system, units, raster offset, observer height.
+    validations:
+      required: false

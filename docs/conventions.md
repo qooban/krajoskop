@@ -36,8 +36,15 @@ docs(repo): record the stack decision
 chore(ci): pin action SHAs
 ```
 
-Types in use: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `chore`.
-`feat` and `fix` drive the changelog; the rest do not.
+Types in use: `feat`, `fix`, `perf`, `docs`, `test`, `refactor`, `chore`,
+`ci`, `build`, `revert`. Scopes are a track ID (R1-R9, P1-P6, S1-S6) or one of
+`repo`, `ci`, `docs`, `data`, `deps`.
+
+`feat`, `fix`, `perf` and `revert` appear in the changelog; the rest are
+hidden. Because merges are squashed, **the pull request title is the commit
+that lands on `main`**, so it is the title that has to be a valid Conventional
+Commit. CI checks it, and a malformed one drops the change out of the release
+notes rather than merely looking untidy.
 
 Where a commit implements requirements, name them in the body. This is what
 feeds `docs/coverage.md`:
@@ -92,6 +99,13 @@ the fields exist because the answers are needed later.
 
 Pull requests use the template checklist. A PR that references a requirement
 ID that does not exist in the specification fails CI.
+
+## Releases
+
+`release-please` keeps an open pull request carrying the next version and the
+generated changelog; merging it tags the release. Below 1.0 both `feat` and
+`fix` bump the patch digit, so the milestone versions are deliberate: put
+`Release-As: 0.1.0` in a commit body to cut alpha.
 
 ## Decisions
 

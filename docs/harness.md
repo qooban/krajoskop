@@ -1,6 +1,6 @@
 # Harness — plan
 
-**Status:** Accepted. E0–E2 done; E3 next.
+**Status:** Accepted. E0–E3 done; E4 next.
 **Date:** September 2026
 **State of the repository:** README, two documents, two ADRs, LICENSE.
 No code, no configuration, no `.gitignore`.
@@ -101,6 +101,16 @@ Conventional Commits, keeps an open release PR with the computed version and
 changelog, and releases when that PR is merged. Conventional Commits are
 already being adopted for other reasons, so this comes almost free.
 
+Because merges are squashed, the **pull request title** is the commit that
+lands on `main`, and therefore the text release-please reads. That makes a
+malformed title a release-notes defect rather than a style lapse, which is why
+CI checks it (`tools/check-pr-title.ts`).
+
+While below 1.0 both `feat` and `fix` bump the patch digit; a breaking change
+bumps the minor. The milestone versions in the specification — 0.1 for alpha,
+0.2 for beta — are deliberate acts, taken by putting `Release-As: 0.1.0` in a
+commit body rather than by accumulating commits.
+
 **Deployment: there is nothing to deploy for alpha.** The core is a library
 with a CLI and the product is a PDF. Publishing to a registry waits until
 somebody other than the author installs it. The mobile app (S5) gets its own
@@ -134,7 +144,7 @@ PR template as a checklist: ID present, tests, CRS and units explicit (NFR-07),
 result deterministic (NFR-08), `docs/coverage.md` current, no new dependency
 without an ADR.
 
-Labels in `.github/labels.yml`, synced by a workflow: `core`, `track:walking`,
+Labels in `.github/labels.json`, synced to GitHub by a workflow on change: `core`, `track:walking`,
 `track:zaokno`, `milestone:alpha|beta|1.0`, `data`, `performance`, `decision`,
 `risk`.
 
@@ -266,7 +276,7 @@ matter and goes stale — the failure mode is silent, because nobody re-reads it
 | E0    | Hygiene: `.gitignore`, layout, conventions, licence, labels, ADR 0001 executed | **Done.** Fresh clone is clean; licence agrees with README                    |
 | E1    | Toolchain: `package.json`, lockfile, strict `tsconfig`, first tests, lint      | **Done.** `pnpm install && pnpm check` passes on a clean machine              |
 | E2    | CI: lint, types, tests; branch protection                                      | **Done**, except branch protection, which is a repository setting — see below |
-| E3    | Process: issue forms, PR template, Conventional Commits, release-please        | Tag `v0.0.1` produces a Release with a generated changelog                    |
+| E3    | Process: issue forms, PR template, Conventional Commits, release-please        | **Done**, with one manual step: a `RELEASE_PLEASE_TOKEN` secret — see below   |
 | E4    | Claude Code: `CLAUDE.md`, settings, hook, commands, subagent                   | A phone session starts and runs tests with no manual setup                    |
 | E5    | Traceability: `check-spec.ts`, `docs/coverage.md` in CI                        | An invented ID in a PR body fails the build                                   |
 | E6    | Prove it on R1 (GPX import)                                                    | Issue to release with no hand-editing of configuration                        |
@@ -326,6 +336,19 @@ dependency list.
 **Float comparison is a lint error.** A custom `no-restricted-syntax` rule
 rejects `===` between numbers and points at NFR-08. Computed distances and
 elevations are compared with a tolerance or not at all.
+
+**The release pull request needs a real token.** A pull request opened with
+the default `GITHUB_TOKEN` does not trigger other workflows, so CI never
+reports on it — and a required check that never reports blocks the merge
+forever. The release workflow therefore prefers a `RELEASE_PLEASE_TOKEN`
+secret (a fine-grained PAT with contents and pull-requests write) and falls
+back to `GITHUB_TOKEN`, where the release pull request has to be merged by an
+administrator. This is a known trap rather than a surprise; it is written down
+so the first release does not run into it.
+
+**Labels are not deleted by the sync.** A label absent from `labels.json` is
+reported and left alone. Deleting it would strip it from whatever issue a
+human put it on, which is worse than a stale label nobody uses.
 
 **Branch protection is not in the repository.** It is a GitHub setting and
 cannot be committed. Required checks to enable on `main` once the repository is

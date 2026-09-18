@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Maintain the release pull request
+    runs-on: ubuntu-latest
+    steps:
+      # Keeps an open pull request carrying the next version and the generated
+      # changelog. Merging that pull request is what tags and publishes the
+      # release, so a release stays a deliberate act.
+      #
+      # RELEASE_PLEASE_TOKEN is a personal access token with contents and
+      # pull-requests write. It matters: a pull request opened with the default
+      # GITHUB_TOKEN does not trigger other workflows, so CI would never report
+      # on the release pull request, and a required check that never reports
+      # blocks the merge forever. With the fallback below the automation still
+      # works, but the release pull request has to be merged by an
+      # administrator. See docs/harness.md.
+      - uses: googleapis/release-please-action@0dfd8538845b8e92600d271a895a5372865d4062 # v5
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}

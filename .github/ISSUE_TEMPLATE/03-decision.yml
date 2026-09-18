@@ -1,0 +1,35 @@
+name: Decision
+description: Something expensive to reverse, including any new dependency
+title: '[decision] '
+labels: ['decision']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Becomes an ADR in docs/decisions/. Adding a dependency counts: for a
+        project whose constraint is NFR-10 and whose correctness rests on a few
+        well-chosen tools, the dependency list is the architecture.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What forces the choice now, and what happens if it is deferred.
+    validations:
+      required: true
+
+  - type: textarea
+    id: options
+    attributes:
+      label: Options
+      description: Each with its cost, honestly. An option with no drawback has not been understood yet.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reversal
+    attributes:
+      label: When to reverse this
+      description: The conditions under which the decision should be revisited, written while it is still cheap to be honest.
+    validations:
+      required: true

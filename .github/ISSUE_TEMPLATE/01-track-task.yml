@@ -1,0 +1,72 @@
+name: Track task
+description: Work on an item from a development track (R, P or S)
+title: '[R0] '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One item from the specification's development tracks. If the work has
+        no track ID, it is probably a defect or a decision instead.
+
+  - type: input
+    id: track-id
+    attributes:
+      label: Track ID
+      description: The ID from the specification, e.g. R2, P1, S4.
+      placeholder: R2
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What this delivers, in a sentence or two.
+    validations:
+      required: true
+
+  - type: input
+    id: requires
+    attributes:
+      label: Requires
+      description: Track IDs this depends on, from the dependency column.
+      placeholder: R1
+    validations:
+      required: true
+
+  - type: input
+    id: requirements
+    attributes:
+      label: Requirements implemented
+      description: FR and NFR IDs this satisfies. These end up in the commit body and in docs/coverage.md.
+      placeholder: FR-05, FR-06, NFR-07
+    validations:
+      required: true
+
+  - type: input
+    id: use-cases
+    attributes:
+      label: Use cases served
+      placeholder: UC-01, UC-04
+    validations:
+      required: false
+
+  - type: textarea
+    id: done-when
+    attributes:
+      label: Done when
+      description: A condition that is checkable, not a feeling.
+      placeholder: The profile for the sample GPX matches the reference within 1 m at every point.
+    validations:
+      required: true
+
+  - type: textarea
+    id: field-verification
+    attributes:
+      label: Field verification
+      description: >
+        NFR-06: every step ends in a result verifiable on foot or from the car.
+        Say how this one is. "Not directly verifiable" is an acceptable answer
+        for pure plumbing — say so rather than inventing something.
+    validations:
+      required: true

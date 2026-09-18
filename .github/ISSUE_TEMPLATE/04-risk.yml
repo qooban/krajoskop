@@ -1,0 +1,37 @@
+name: Risk
+description: An open question from the specification, or a new one
+title: '[risk] '
+labels: ['risk']
+body:
+  - type: input
+    id: risk-id
+    attributes:
+      label: Risk ID
+      description: The ID from the specification if it has one, e.g. R-03. Leave blank for a new risk.
+      placeholder: R-03
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+    validations:
+      required: true
+
+  - type: input
+    id: settle-by
+    attributes:
+      label: Settle before
+      description: The track ID this must be resolved ahead of.
+      placeholder: Before S1
+    validations:
+      required: true
+
+  - type: textarea
+    id: if-confirmed
+    attributes:
+      label: If it turns out badly
+      description: What is blocked, and what the fallback is.
+    validations:
+      required: true

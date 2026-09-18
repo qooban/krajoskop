@@ -1,0 +1,64 @@
+name: Labels
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/labels.json
+      - .github/workflows/labels.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    name: Sync labels from .github/labels.json
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
+        with:
+          script: |
+            const { readFileSync } = require('node:fs');
+            const wanted = JSON.parse(
+              readFileSync('.github/labels.json', 'utf8'),
+            );
+
+            const existing = await github.paginate(
+              github.rest.issues.listLabelsForRepo,
+              { owner: context.repo.owner, repo: context.repo.repo },
+            );
+            const byName = new Map(existing.map((l) => [l.name, l]));
+
+            for (const label of wanted) {
+              const current = byName.get(label.name);
+              if (current === undefined) {
+                await github.rest.issues.createLabel({
+                  ...context.repo,
+                  ...label,
+                });
+                core.info(`created ${label.name}`);
+              } else if (
+                current.color !== label.color ||
+                (current.description ?? '') !== label.description
+              ) {
+                await github.rest.issues.updateLabel({
+                  ...context.repo,
+                  ...label,
+                  new_name: label.name,
+                });
+                core.info(`updated ${label.name}`);
+              }
+            }
+
+            // Labels not in the file are left alone. Deleting them would throw
+            // away whatever a human added by hand on an issue, which is a
+            // worse failure than a stale label sitting unused.
+            const unknown = existing
+              .map((l) => l.name)
+              .filter((n) => !wanted.some((w) => w.name === n));
+            if (unknown.length > 0) {
+              core.notice(`Not in labels.json, left alone: ${unknown.join(', ')}`);
+            }

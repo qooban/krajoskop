@@ -1,6 +1,6 @@
 # Harness — plan
 
-**Status:** Draft, pending ADR 0001 and ADR 0002
+**Status:** Accepted. E0–E2 done; E3 next.
 **Date:** September 2026
 **State of the repository:** README, two documents, two ADRs, LICENSE.
 No code, no configuration, no `.gitignore`.
@@ -42,24 +42,24 @@ coordinate a team of thirty, or to satisfy an auditor, is not automatically
 good for a solo hobby project. Most of what is skipped is skipped because its
 benefit is coordination, and there is nobody to coordinate with.
 
-| Practice | Source of authority | Taken? |
-|---|---|---|
-| Trunk-based development, short-lived branches | DORA / Accelerate research; trunkbaseddevelopment.com | Yes |
-| Conventional Commits | De facto standard, tooling ecosystem | Yes |
-| Semantic Versioning | semver.org | Yes, in 0.x |
-| Keep a Changelog | keepachangelog.com | Yes, generated |
-| Architecture Decision Records | Nygard, MADR | Yes, already started |
-| GitHub issue forms, PR templates | GitHub-native | Yes |
-| Branch protection, required checks | OpenSSF SCM Best Practices | Yes, narrow |
-| Pinned dependencies, frozen lockfile installs | OpenSSF Scorecard | Yes |
-| Automated dependency updates | Renovate / Dependabot | Yes, grouped monthly |
-| Pinned GitHub Action SHAs | OpenSSF Scorecard | Yes — cheap |
-| Diátaxis documentation structure | diataxis.fr | Partly, when docs grow |
-| Requirement traceability matrix | Safety-critical engineering | **Adapted** — see §10 |
-| CODEOWNERS, review requirements | Team practice | No — solo |
-| Signed commits, DCO, CLA | Supply chain, legal | No — no contributors |
-| OS and runtime version matrix in CI | Library practice | No — Linux only |
-| Monorepo build orchestration (Nx, Turborepo) | Large TS repos | Not yet — see §11 |
+| Practice                                      | Source of authority                                   | Taken?                 |
+| --------------------------------------------- | ----------------------------------------------------- | ---------------------- |
+| Trunk-based development, short-lived branches | DORA / Accelerate research; trunkbaseddevelopment.com | Yes                    |
+| Conventional Commits                          | De facto standard, tooling ecosystem                  | Yes                    |
+| Semantic Versioning                           | semver.org                                            | Yes, in 0.x            |
+| Keep a Changelog                              | keepachangelog.com                                    | Yes, generated         |
+| Architecture Decision Records                 | Nygard, MADR                                          | Yes, already started   |
+| GitHub issue forms, PR templates              | GitHub-native                                         | Yes                    |
+| Branch protection, required checks            | OpenSSF SCM Best Practices                            | Yes, narrow            |
+| Pinned dependencies, frozen lockfile installs | OpenSSF Scorecard                                     | Yes                    |
+| Automated dependency updates                  | Renovate / Dependabot                                 | Yes, grouped monthly   |
+| Pinned GitHub Action SHAs                     | OpenSSF Scorecard                                     | Yes — cheap            |
+| Diátaxis documentation structure              | diataxis.fr                                           | Partly, when docs grow |
+| Requirement traceability matrix               | Safety-critical engineering                           | **Adapted** — see §10  |
+| CODEOWNERS, review requirements               | Team practice                                         | No — solo              |
+| Signed commits, DCO, CLA                      | Supply chain, legal                                   | No — no contributors   |
+| OS and runtime version matrix in CI           | Library practice                                      | No — Linux only        |
+| Monorepo build orchestration (Nx, Turborepo)  | Large TS repos                                        | Not yet — see §11      |
 
 ## 1. Integration and branching
 
@@ -110,8 +110,8 @@ not grow infrastructure on speculation.
 ## 4. Decisions
 
 ADRs in `docs/decisions/`, numbered, MADR-shaped: context, decision,
-consequences, alternatives, and — added here — an explicit *when to reverse
-this* section. The specification already contains "Decyzja architektoniczna"
+consequences, alternatives, and — added here — an explicit _when to reverse
+this_ section. The specification already contains "Decyzja architektoniczna"
 blocks; new decisions land here instead of being buried in prose.
 
 The rule that gives ADRs their value: **a new dependency requires an ADR.**
@@ -123,12 +123,12 @@ dependency list is the architecture.
 
 GitHub issue forms, four kinds:
 
-| Form | Required fields |
-|---|---|
+| Form       | Required fields                                                       |
+| ---------- | --------------------------------------------------------------------- |
 | Track task | ID, requirements, use cases, "done when", field verification (NFR-06) |
-| Defect | Route and input data, expected vs actual value, model version |
-| Decision | Context, options, choice, consequences — becomes an ADR |
-| Risk | Description, when it must be settled, what it blocks if confirmed |
+| Defect     | Route and input data, expected vs actual value, model version         |
+| Decision   | Context, options, choice, consequences — becomes an ADR               |
+| Risk       | Description, when it must be settled, what it blocks if confirmed     |
 
 PR template as a checklist: ID present, tests, CRS and units explicit (NFR-07),
 result deterministic (NFR-08), `docs/coverage.md` current, no new dependency
@@ -144,16 +144,16 @@ GitHub Actions, free for public repositories (see D-04). Concurrency groups to
 cancel superseded runs, dependency caching, path filters so documentation-only
 changes skip the test matrix.
 
-| Check | Tool | When |
-|---|---|---|
-| Lint and format | ESLint + Prettier, or Biome | Every push |
-| Types | `tsc --noEmit`, strict | Every push |
-| Unit tests | Vitest, budget 60 s | Every push |
-| Golden-file tests | Vitest snapshots against `data/sample/expected/` | Every push |
-| Geospatial tool tests | GDAL, WhiteboxTools installed | Nightly and on label |
-| Traceability | `tools/check-spec.ts` | Every push |
-| Docs | Link check, markdown lint | Every push |
-| Performance | Benchmarks against NFR-01, NFR-02 | Nightly, non-blocking at first |
+| Check                 | Tool                                             | When                           |
+| --------------------- | ------------------------------------------------ | ------------------------------ |
+| Lint and format       | ESLint (`strictTypeChecked`) + Prettier          | Every push                     |
+| Types                 | `tsc --noEmit`, strict                           | Every push                     |
+| Unit tests            | Vitest, budget 60 s                              | Every push                     |
+| Golden-file tests     | Vitest snapshots against `data/sample/expected/` | Every push                     |
+| Geospatial tool tests | GDAL, WhiteboxTools installed                    | Nightly and on label           |
+| Traceability          | `tools/check-spec.ts`                            | Every push                     |
+| Docs                  | Link check, markdown lint                        | Every push                     |
+| Performance           | Benchmarks against NFR-01, NFR-02                | Nightly, non-blocking at first |
 
 Required checks on `main`: lint, types, unit, golden, traceability. The
 geospatial and performance jobs are deliberately not required — a nightly
@@ -220,7 +220,7 @@ Mechanism:
 
 - Commit scope carries the ID; body carries `Implements: FR-05, UC-01`.
 - Tests declare what they cover: `test('samples elevation from NMT',
-  { tag: 'FR-05' }, ...)`.
+{ tag: 'FR-05' }, ...)`.
 - `tools/check-spec.ts` verifies that every referenced ID exists in the
   specification, and regenerates `docs/coverage.md` — requirement by
   requirement, with links to covering tests. CI fails when it is stale.
@@ -230,15 +230,15 @@ in a PR body fails the build. The changelog groups itself by track.
 
 ## 11. The Claude Code harness
 
-| File | Role |
-|---|---|
-| `CLAUDE.md` | The project in ten sentences, where the specification lives, the ID discipline, how to run tests, definition of done, the prohibitions |
-| `.claude/settings.json` | Pre-approved `pnpm`, `vitest`, `tsc`, read-only `git`; environment variables |
-| `.claude/hooks/session-start.sh` | Web session setup: `pnpm install --frozen-lockfile`, report missing GDAL or WhiteboxTools. Target: ready in under two minutes |
-| `.claude/commands/task.md` | `/task R2` — reads the spec by ID, opens issue, branch and plan |
-| `.claude/commands/coverage.md` | `/coverage` — regenerates `docs/coverage.md` |
-| `.claude/commands/card.md` | `/card` — runs the pipeline on the sample route and shows the result |
-| `.claude/agents/geo-reviewer.md` | Subagent reviewing diffs *only* for CRS, units, raster axis direction and observer height |
+| File                             | Role                                                                                                                                   |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `CLAUDE.md`                      | The project in ten sentences, where the specification lives, the ID discipline, how to run tests, definition of done, the prohibitions |
+| `.claude/settings.json`          | Pre-approved `pnpm`, `vitest`, `tsc`, read-only `git`; environment variables                                                           |
+| `.claude/hooks/session-start.sh` | Web session setup: `pnpm install --frozen-lockfile`, report missing GDAL or WhiteboxTools. Target: ready in under two minutes          |
+| `.claude/commands/task.md`       | `/task R2` — reads the spec by ID, opens issue, branch and plan                                                                        |
+| `.claude/commands/coverage.md`   | `/coverage` — regenerates `docs/coverage.md`                                                                                           |
+| `.claude/commands/card.md`       | `/card` — runs the pipeline on the sample route and shows the result                                                                   |
+| `.claude/agents/geo-reviewer.md` | Subagent reviewing diffs _only_ for CRS, units, raster axis direction and observer height                                              |
 
 The prohibitions are worth stating explicitly in `CLAUDE.md`, because every
 one of them already exists in the specification and every one is the kind of
@@ -261,15 +261,15 @@ matter and goes stale — the failure mode is silent, because nobody re-reads it
 
 ## Stages
 
-| Stage | Scope | Done when |
-|---|---|---|
-| E0 | Hygiene: `.gitignore`, layout, conventions, licence, labels, ADR 0001 executed | Fresh clone is clean; licence agrees with README |
-| E1 | Toolchain: `package.json`, lockfile, strict `tsconfig`, one trivial test, lint | `pnpm install && pnpm test` passes on a clean machine |
-| E2 | CI: lint, types, tests; branch protection | A red run cannot be merged |
-| E3 | Process: issue forms, PR template, Conventional Commits, release-please | Tag `v0.0.1` produces a Release with a generated changelog |
-| E4 | Claude Code: `CLAUDE.md`, settings, hook, commands, subagent | A phone session starts and runs tests with no manual setup |
-| E5 | Traceability: `check-spec.ts`, `docs/coverage.md` in CI | An invented ID in a PR body fails the build |
-| E6 | Prove it on R1 (GPX import) | Issue to release with no hand-editing of configuration |
+| Stage | Scope                                                                          | Done when                                                                     |
+| ----- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| E0    | Hygiene: `.gitignore`, layout, conventions, licence, labels, ADR 0001 executed | **Done.** Fresh clone is clean; licence agrees with README                    |
+| E1    | Toolchain: `package.json`, lockfile, strict `tsconfig`, first tests, lint      | **Done.** `pnpm install && pnpm check` passes on a clean machine              |
+| E2    | CI: lint, types, tests; branch protection                                      | **Done**, except branch protection, which is a repository setting — see below |
+| E3    | Process: issue forms, PR template, Conventional Commits, release-please        | Tag `v0.0.1` produces a Release with a generated changelog                    |
+| E4    | Claude Code: `CLAUDE.md`, settings, hook, commands, subagent                   | A phone session starts and runs tests with no manual setup                    |
+| E5    | Traceability: `check-spec.ts`, `docs/coverage.md` in CI                        | An invented ID in a PR body fails the build                                   |
+| E6    | Prove it on R1 (GPX import)                                                    | Issue to release with no hand-editing of configuration                        |
 
 E0–E2 is one evening; E3–E5 a second. E6 is a measurement, not a formality.
 
@@ -285,10 +285,10 @@ E0–E2 is one evening; E3–E5 a second. E6 is a measurement, not a formality.
 
 **D-02** — superseded by [ADR 0002](decisions/0002-technology-stack.md).
 
-**D-03 — Licence.** MIT in the file, "to be decided" in the README. MIT is
-safe: GDAL is MIT/X-style, WhiteboxTools is MIT, and GRASS is GPL but invoked
-as an external process, so its licence does not reach this code. Worth an ADR,
-because importing a GPL library in process would change the answer.
+**D-03 — Licence.** _Settled in E0: MIT._ GDAL is MIT/X-style, WhiteboxTools
+is MIT, and GRASS is GPL but invoked as an external process, so its licence
+does not reach this code. Still worth an ADR before any in-process GPL
+dependency, which would change the answer.
 
 **D-04 — Public repository now.** No secrets, and public repositories get
 unlimited free Actions minutes. Recommended: public, with a README that says
@@ -300,6 +300,31 @@ instead of the data.
 **D-06 — Package layout.** Single package until there is a second consumer of
 the core. When the mobile app arrives (S5), split into a pnpm workspace and
 revisit Turborepo then — not before, and not on speculation.
+
+## Settled while building E0-E2
+
+**ESLint with `strictTypeChecked`, not Biome.** Type-aware rules are the
+reason: this project orchestrates subprocesses, so `no-floating-promises` is a
+correctness rule here rather than a style preference. It caught a real defect
+within minutes of being switched on.
+
+**TypeScript pinned to 5.x.** TypeScript 7, the native compiler, installs
+happily but sits outside typescript-eslint's supported peer range, which would
+cost the type-aware linting above. Revisit once typescript-eslint supports 7 —
+the gain is a much faster `typecheck`.
+
+**No runner dependency for tooling scripts.** Node 22 strips types natively, so
+`tools/*.ts` runs under plain `node`, with no `tsx` or `ts-node` in the
+dependency list.
+
+**Float comparison is a lint error.** A custom `no-restricted-syntax` rule
+rejects `===` between numbers and points at NFR-08. Computed distances and
+elevations are compared with a tolerance or not at all.
+
+**Branch protection is not in the repository.** It is a GitHub setting and
+cannot be committed. Required checks to enable on `main` once the repository is
+public (D-04): `Format, lint, types, tests` and `Documentation links`, plus
+linear history and no force pushes.
 
 ## Deliberately skipped
 
@@ -321,7 +346,7 @@ by printing the skipped count in the run summary, so the gap is visible rather
 than comfortable.
 
 **H-03 — Specification drifting from code.** The largest threat to this
-repository's value, since today the whole project *is* the documents.
+repository's value, since today the whole project _is_ the documents.
 Mitigated by E5: IDs checked by a program, not by good intentions.
 
 **H-04 — Sample data bloat.** Terrain models are heavy. Mitigated by a hard

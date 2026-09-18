@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Test and tooling caches
+coverage/
+.vitest/
+.eslintcache
+
+# Terrain data. Only data/sample/ is tracked; everything else is fetched
+# by tools/fetch-data.ts and must never enter git. See docs/harness.md H-04.
+data/*
+!data/sample/
+!data/sample/**
+
+# Scratch output from analysis runs
+out/
+*.tif.aux.xml
+
+# GRASS and QGIS artefacts
+grassdata/
+*.qgs~
+*.qgz~
+
+# Environment
+.env
+.env.local
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json

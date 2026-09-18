@@ -1,6 +1,6 @@
 # 0002 — Technology stack
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** September 2026
 **Related:** [0001 — Language of the repository](0001-language-of-the-repository.md)
 
@@ -9,8 +9,8 @@
 The specification names a Python stack — `rasterio`, `geopandas`, `pvlib`,
 GRASS GIS — chosen on the reasonable assumption that serious geospatial work
 means Python. The working preference is a full TypeScript stack, with one
-condition: *Python must not decisively beat TypeScript in the availability of
-solutions useful to this project.*
+condition: _Python must not decisively beat TypeScript in the availability of
+solutions useful to this project._
 
 That is the right test. This ADR answers it capability by capability rather
 than by reputation, because the reputation answer ("Python owns geospatial")
@@ -44,24 +44,24 @@ is language-agnostic.
 
 Assessed against the specification's own track IDs.
 
-| Need | Python | TypeScript | Verdict |
-|---|---|---|---|
-| R1 GPX and KML import | `gpxpy`, `fiona` | `@tmcw/togeojson`, XML parsers | Tie |
-| R2 DEM read, windowed | `rasterio` | `geotiff.js` (pure JS, COG windows), `gdal-async` | Tie |
-| R2 profile smoothing | `scipy.signal` | hand-written, ~50 lines | **Python** |
-| R3 slope, aspect | `richdem`, `gdaldem` | `gdaldem`, WhiteboxTools | Tie — CLI |
-| R4 solar position | `pvlib`, `astral` | `astronomy-engine`, `suncalc` | Tie |
-| R4 terrain shading | GRASS, derived from viewshed | same tools | Tie — CLI |
-| R5, R6 viewshed | GRASS `r.viewshed` | `gdal raster viewshed`, WhiteboxTools | Tie — CLI |
-| R7 OSM and PRNG matching | `geopandas`, `shapely`, `osmnx` | `turf.js`, JSTS, Overpass clients | Slight Python |
-| R8 landcover masks from NMPT | `rasterio` | GDAL CLI | Slight Python |
-| R9 georeferencing old maps | GDAL CLI | GDAL CLI | Tie |
-| CRS transforms | `pyproj`, full PROJ pipelines and grids | `proj4js`, Helmert only | **Python** — see R-11 |
-| P1 walking-model calibration | `scipy.optimize`, `statsmodels` | hand-written least squares | **Python** |
-| P5 printable route card | `reportlab`, `weasyprint` | HTML plus Playwright, or Typst | **TypeScript** |
-| Map rendering, PMTiles | bindings | MapLibre GL, `pmtiles` — native home | **TypeScript** |
-| S5 mobile app | not applicable | React Native or Expo | **TypeScript** |
-| Bielik, Piper, routing | subprocess or HTTP | subprocess or HTTP | Tie |
+| Need                         | Python                                  | TypeScript                                        | Verdict               |
+| ---------------------------- | --------------------------------------- | ------------------------------------------------- | --------------------- |
+| R1 GPX and KML import        | `gpxpy`, `fiona`                        | `@tmcw/togeojson`, XML parsers                    | Tie                   |
+| R2 DEM read, windowed        | `rasterio`                              | `geotiff.js` (pure JS, COG windows), `gdal-async` | Tie                   |
+| R2 profile smoothing         | `scipy.signal`                          | hand-written, ~50 lines                           | **Python**            |
+| R3 slope, aspect             | `richdem`, `gdaldem`                    | `gdaldem`, WhiteboxTools                          | Tie — CLI             |
+| R4 solar position            | `pvlib`, `astral`                       | `astronomy-engine`, `suncalc`                     | Tie                   |
+| R4 terrain shading           | GRASS, derived from viewshed            | same tools                                        | Tie — CLI             |
+| R5, R6 viewshed              | GRASS `r.viewshed`                      | `gdal raster viewshed`, WhiteboxTools             | Tie — CLI             |
+| R7 OSM and PRNG matching     | `geopandas`, `shapely`, `osmnx`         | `turf.js`, JSTS, Overpass clients                 | Slight Python         |
+| R8 landcover masks from NMPT | `rasterio`                              | GDAL CLI                                          | Slight Python         |
+| R9 georeferencing old maps   | GDAL CLI                                | GDAL CLI                                          | Tie                   |
+| CRS transforms               | `pyproj`, full PROJ pipelines and grids | `proj4js`, Helmert only                           | **Python** — see R-11 |
+| P1 walking-model calibration | `scipy.optimize`, `statsmodels`         | hand-written least squares                        | **Python**            |
+| P5 printable route card      | `reportlab`, `weasyprint`               | HTML plus Playwright, or Typst                    | **TypeScript**        |
+| Map rendering, PMTiles       | bindings                                | MapLibre GL, `pmtiles` — native home              | **TypeScript**        |
+| S5 mobile app                | not applicable                          | React Native or Expo                              | **TypeScript**        |
+| Bielik, Piper, routing       | subprocess or HTTP                      | subprocess or HTTP                                | Tie                   |
 
 Python wins four rows. Three of them — smoothing, calibration, statistics —
 are the same row wearing different hats: **numerical glue**. That is the real
@@ -70,13 +70,13 @@ finding, and it is narrower than "Python owns geospatial".
 ## The structural argument
 
 The specification already draws the decisive line, in the architecture
-section: *the phone computes nothing, it replays a prepared timeline.*
+section: _the phone computes nothing, it replays a prepared timeline._
 S5 is a mobile app. The map layer is MapLibre GL and PMTiles. The route card
 is a document.
 
 **This project contains TypeScript whether or not anybody decides to use
 TypeScript.** The question was never Python versus TypeScript. It was whether
-the project should contain Python *as well*.
+the project should contain Python _as well_.
 
 For a solo project worked on in bursts, often from a phone, through an agent,
 a second language is not a neutral cost. It is a second toolchain, a second

@@ -1,67 +1,73 @@
 # Krajoskop
 
-Przyrząd do oglądania kraju.
+An instrument for viewing the country.
 
-Krajoskop liczy z numerycznego modelu terenu rzeczy, których nie podaje żadna
-aplikacja turystyczna, i podaje je w jednym dokumencie.
+Krajoskop computes, from a digital terrain model, the things no hiking app
+reports, and puts them in a single document.
 
-**Tryb pieszy** odpowiada na pytanie „ile mnie to będzie kosztować i kiedy wyjść":
-realny czas przejścia kalibrowany na własnych przejściach, mapa stromizn
-z rozróżnieniem podejść i zejść, przebieg cienia w konkretnym dniu, nazwane
-szczyty z punktów widokowych.
+**Walking mode** answers "what will this cost me and when should I leave":
+real walking time calibrated on your own tracks, a gradient map that
+distinguishes ascents from descents, how shade moves across a given day,
+named summits from viewpoints.
 
-**Tryb samochodowy (Zaokno)** odpowiada na „co zobaczymy po drodze":
-co jest widoczne z drogi, po której stronie, jak długo, gdzie wolno stanąć
-i o której światło będzie dobre. Narrację czyta **Włóczykij**.
+**Driving mode (Zaokno)** answers "what will we see on the way": what is
+visible from the road, on which side, for how long, where you are allowed to
+stop and when the light will be good. The narration is read by **Włóczykij**.
 
-Oba tryby stoją na jednym rdzeniu liczącym i są rozwijane równolegle.
+Both modes rest on one computing core and are developed in parallel.
 
-## Czym to nie jest
+## What this is not
 
-To nie jest kolejny audioprzewodnik ani kolejna apka ze szlakami. Rynek narracji
-GPS w samochodzie jest nasycony — patrz [research rynkowy](docs/research-rynkowy.md).
-Krajoskop jest warstwą **analizy widoczności i terenu**, której nikt nie ma,
-dostarczaną dwoma kanałami: kartą do czytania i narracją w ruchu.
+Not another audio guide and not another trails app. The market for GPS
+narration in the car is saturated — see the [market research](docs/market-research.md).
+Krajoskop is the layer of **visibility and terrain analysis** that nobody has,
+delivered through two channels: a card to read and narration on the move.
 
-Zdanie, które ma odróżniać ten projekt od konkurencji:
+The sentence meant to separate this project from its competition:
 
-> Po lewej za dwie minuty otworzy się widok na Tatry, przez czterdzieści sekund.
+> On the left, in two minutes, a view of the Tatras will open up, for forty
+> seconds.
 
-To wynik rachunku na modelu terenu, nie wpis z listy atrakcji przy drodze.
+That is the result of a computation on a terrain model, not an entry in a list
+of roadside attractions.
 
-## Dokumentacja
+## Documentation
 
-| Dokument | Zawartość |
-|---|---|
-| [docs/specyfikacja.md](docs/specyfikacja.md) | Persony, tryby, architektura, tory rozwoju, use case'y, wymagania, ryzyka |
-| [docs/research-rynkowy.md](docs/research-rynkowy.md) | Co już istnieje na rynku, gdzie jest luka, źródła |
-| [docs/harness.md](docs/harness.md) | Plan standardów pracy w repo i harnessu dla Claude Code (po angielsku) |
-| [docs/decisions/](docs/decisions/) | Decyzje architektoniczne (ADR). Otwarte: język repozytorium, stack |
+| Document                                           | Contents                                                                          |
+| -------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [docs/specification.md](docs/specification.md)     | Personas, modes, architecture, development tracks, use cases, requirements, risks |
+| [docs/market-research.md](docs/market-research.md) | What already exists, where the gap is, sources                                    |
+| [docs/harness.md](docs/harness.md)                 | Working standards in the repository and the harness for Claude Code               |
+| [docs/conventions.md](docs/conventions.md)         | Commits, branches, code and documentation style                                   |
+| [docs/glossary.md](docs/glossary.md)               | Domain terms, Polish to English                                                   |
+| [docs/decisions/](docs/decisions/)                 | Architecture decision records                                                     |
 
 ## Stack
 
-Wszystko na wolnych licencjach, bez ani jednej płatnej usługi.
+Everything on free licences, without a single paid service.
 
-- **Dane terenu** — NMT i NMPT z lotniczego skaningu laserowego (GUGiK, bezpłatne),
-  BDOT10k, PRNG; Copernicus DEM jako zapas poza Polską
-- **Geometria i rastry** — `rasterio`, `rioxarray`, `geopandas`, `shapely`, `pyproj`
-- **Widoczność** — GRASS GIS `r.viewshed`
-- **Słońce** — `pvlib` lub `astral`, liczone lokalnie
-- **Routing** — Valhalla lub GraphHopper
-- **Język** — Bielik (Apache 2.0, uruchamiany lokalnie)
-- **Synteza mowy** — Piper (MIT, tylko CPU, offline, głos polski)
-- **Mapy w aplikacji** — MapLibre GL z kaflami PMTiles
+- **Language** — TypeScript on Node.js. See [ADR 0002](docs/decisions/0002-technology-stack.md)
+- **Terrain data** — DTM and DSM from airborne laser scanning (GUGiK, free),
+  BDOT10k, PRNG; Copernicus DEM as a fallback outside Poland
+- **Rasters and geometry** — GDAL CLI, WhiteboxTools, `geotiff.js`, `turf.js`
+- **Visibility** — `gdal raster viewshed`, WhiteboxTools, GRASS GIS `r.viewshed`
+- **Sun** — `astronomy-engine`, computed locally
+- **Routing** — Valhalla or GraphHopper
+- **Language model** — Bielik (Apache 2.0, run locally)
+- **Speech synthesis** — Piper (MIT, CPU only, offline, Polish voice)
+- **Maps in the application** — MapLibre GL with PMTiles
+
+The repository is written in English; the product speaks Polish. See
+[ADR 0001](docs/decisions/0001-language-of-the-repository.md).
 
 ## Status
 
-Wersja alpha specyfikacji. Kodu jeszcze nie ma.
+Alpha specification, and the repository harness being put in place. No
+computing code yet.
 
-Kolejny krok: standardy pracy w repo i harness dla Claude Code — konwencje,
-szablony issue i pull requestów, zasady wersjonowania, release i deploymentu.
-Plan tego kroku leży w [docs/harness.md](docs/harness.md) i czeka
-na zatwierdzenie, razem z dwiema decyzjami: językiem repozytorium (ADR 0001)
-i stackiem (ADR 0002). Dopiero potem analiza techniczna i development.
+Next step: finish stages E0–E2 of [the harness plan](docs/harness.md), then
+R1 — route loading.
 
-## Licencja
+## Licence
 
-Do ustalenia.
+MIT. See [LICENSE](LICENSE).

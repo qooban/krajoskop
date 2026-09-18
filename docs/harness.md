@@ -1,272 +1,355 @@
 # Harness — plan
 
-**Wersja:** plan do zatwierdzenia
-**Data:** wrzesień 2026
-**Stan repozytorium:** README, dwa dokumenty, LICENSE. Zero kodu, zero
-konfiguracji, brak `.gitignore`.
+**Status:** Draft, pending ADR 0001 and ADR 0002
+**Date:** September 2026
+**State of the repository:** README, two documents, two ADRs, LICENSE.
+No code, no configuration, no `.gitignore`.
 
-Dokument opisuje, co postawić w repozytorium, zanim powstanie pierwsza linia
-kodu liczącego, i w jakiej kolejności. Zakres wzięty ze specyfikacji
-(„Następny krok"): konwencje, szablony issue i pull requestów, zasady
-wersjonowania, release i deploymentu — plus harness dla Claude Code, bo to
-jest narzędzie, którym ten projekt będzie budowany.
+What to put in the repository before the first line of computing code, in what
+order, and — for each item — which industry practice it comes from and what
+was deliberately left out of it.
 
----
-
-## Po co
-
-Projekt ma trzy cechy, które razem decydują o kształcie harnessu.
-
-**Jedna osoba, praca zrywami, często z telefonu.** Harness ma odtwarzać
-kontekst za ciebie. Po trzech tygodniach przerwy pytanie „co dalej"
-ma mieć odpowiedź w repozytorium, nie w pamięci.
-
-**Specyfikacja z identyfikatorami.** R1–R9, P1–P6, S1–S6, UC-01…UC-20,
-FR-01…FR-35, NFR-01…NFR-10, R-01…R-10. To jest gotowy szkielet procesu —
-albo zostanie wpięty w commity, issue i CI, albo za pół roku będzie martwym
-dokumentem rozjeżdżonym z kodem. To najważniejsza decyzja w całym planie.
-
-**Wyniki liczbowe, które trudno sprawdzić okiem.** Zły układ współrzędnych,
-pomylone jednostki albo przesunięty model terenu nie wywalają programu —
-dają liczbę, która wygląda wiarygodnie i jest fałszywa. Harness musi łapać
-tę klasę błędów, bo przegląd kodu jej nie złapie.
-
-## Zasady
-
-- Każdy element harnessu ma powód wynikający z powyższych trzech cech.
-  Nie ma „bo tak się robi".
-- Etapami. Każdy etap zostawia repozytorium w stanie użytecznym.
-- Zero płatnych usług, zgodnie z NFR-10. GitHub Actions w repozytorium
-  publicznym wystarczy.
-- Szybka pętla ma zostać szybka. Wszystko, co trwa dłużej niż minutę,
-  idzie poza domyślny bieg testów.
-- Harness nie jest projektem. Jeśli urośnie ponad tydzień roboty, coś poszło
-  nie tak — patrz H-01.
+Assumes [ADR 0002](decisions/0002-technology-stack.md): TypeScript, with GDAL
+and WhiteboxTools as command-line tools. The practices in sections 1 to 9 are
+stack-agnostic; only the toolchain table changes if that ADR is rejected.
 
 ---
 
-## Składniki
+## Why this project needs one
 
-### 1. Higiena repozytorium
+Three traits decide the shape. Everything below is traceable to one of them;
+anything that is not traceable to one of them was cut.
 
-| Element | Zawartość |
-|---|---|
-| `.gitignore` | `__pycache__`, `.venv`, `.pytest_cache`, `dane/` poza `dane/probne/`, artefakty QGIS i GRASS |
-| Struktura katalogów | `src/krajoskop/` (rdzeń i tory), `tests/`, `narzedzia/` (skrypty repo), `dane/probne/`, `docs/` |
-| `docs/konwencje.md` | Jedno miejsce na styl kodu, styl dokumentów, format commitów, nazewnictwo gałęzi |
-| `docs/glosariusz.md` | Mapowanie pojęć z polskiej domeny na identyfikatory w kodzie — patrz D-01 |
-| `docs/decyzje/` | ADR-y, numerowane. W specyfikacji są już bloki „Decyzja architektoniczna"; tutaj lądują następne |
-| Licencja | README mówi „do ustalenia", plik mówi MIT. Rozstrzygnąć i uspójnić — patrz D-03 |
+**One person, working in bursts, often from a phone.** The harness has to
+reconstruct context. After three weeks away, "what now" must be answerable
+from the repository rather than from memory.
 
-### 2. Środowisko
+**A specification that is already an identifier system.** R1–R9, P1–P6, S1–S6,
+UC-01…UC-20, FR-01…FR-35, NFR-01…NFR-10, R-01…R-11. Either those get wired
+into commits, templates and CI, or in six months they are a dead document that
+disagrees with the code.
 
-Python 3.12, `uv` jako menedżer zależności i lockfile (MIT, szybki, działa
-w kontenerze sesji webowej bez zabawy). `rasterio`, `pyproj` i `geopandas`
-mają koła manylinux z własnym GDAL i PROJ — systemowy GDAL nie jest potrzebny.
+**Results are numbers you cannot eyeball.** A wrong CRS, swapped units or a
+half-pixel raster offset do not crash anything. They produce a plausible number
+that is wrong. Code review does not catch this class of defect; tests and
+narrow automated checks do.
 
-GRASS GIS jest wyjątkiem: `r.viewshed` nie instaluje się z pip. Stąd reguła:
-**widoczność wchodzi do rdzenia przez interfejs z dwoma backendami** —
-`grass` tam, gdzie jest zainstalowany, i zgrubny backend referencyjny
-do testów i do maszyn bez GRASS-a. Testy wymagające GRASS-a dostają marker
-`@pytest.mark.grass` i domyślnie są pomijane. Bez tego każda sesja z telefonu
-zaczyna się od kwadransa instalacji, a połowa testów i tak nie przejdzie.
+## What "industry best practice" means here
 
-Dane próbne: jeden krótki ślad GPX, jeden wycinek NMT (kilka MB), jeden
-fragment trasy przejazdu. W repozytorium, z plikiem `dane/probne/ZRODLA.md`
-opisującym pochodzenie i licencję każdego. Duże dane — skryptem
-`narzedzia/pobierz_dane.py` z sumą kontrolną, nigdy w git.
+The practices below are the ones with real evidence or genuine consensus
+behind them. They were filtered against a rule: a practice designed to
+coordinate a team of thirty, or to satisfy an auditor, is not automatically
+good for a solo hobby project. Most of what is skipped is skipped because its
+benefit is coordination, and there is nobody to coordinate with.
 
-### 3. Kontrola jakości
-
-| Bieg | Narzędzie | Kiedy |
+| Practice | Source of authority | Taken? |
 |---|---|---|
-| Lint i format | `ruff check`, `ruff format --check` | Każdy push |
-| Typy | `mypy` w trybie strict na `src/` | Każdy push |
-| Testy szybkie | `pytest -m "not wolne and not grass"` | Każdy push, budżet 60 s |
-| Testy z GRASS | `pytest -m grass` po instalacji pakietu | Nocny bieg i na etykietę |
-| Testy złote | Porównanie z `dane/probne/oczekiwane/*.json` | Każdy push |
-| Identyfikatory | `narzedzia/sprawdz_spec.py` | Każdy push |
-| Dokumenty | Martwe odnośniki, typografia polska | Każdy push |
-| Wydajność | `pytest-benchmark` wobec NFR-01 i NFR-02 | Nocny bieg, na start bez blokowania |
+| Trunk-based development, short-lived branches | DORA / Accelerate research; trunkbaseddevelopment.com | Yes |
+| Conventional Commits | De facto standard, tooling ecosystem | Yes |
+| Semantic Versioning | semver.org | Yes, in 0.x |
+| Keep a Changelog | keepachangelog.com | Yes, generated |
+| Architecture Decision Records | Nygard, MADR | Yes, already started |
+| GitHub issue forms, PR templates | GitHub-native | Yes |
+| Branch protection, required checks | OpenSSF SCM Best Practices | Yes, narrow |
+| Pinned dependencies, frozen lockfile installs | OpenSSF Scorecard | Yes |
+| Automated dependency updates | Renovate / Dependabot | Yes, grouped monthly |
+| Pinned GitHub Action SHAs | OpenSSF Scorecard | Yes — cheap |
+| Diátaxis documentation structure | diataxis.fr | Partly, when docs grow |
+| Requirement traceability matrix | Safety-critical engineering | **Adapted** — see §10 |
+| CODEOWNERS, review requirements | Team practice | No — solo |
+| Signed commits, DCO, CLA | Supply chain, legal | No — no contributors |
+| OS and runtime version matrix in CI | Library practice | No — Linux only |
+| Monorepo build orchestration (Nx, Turborepo) | Large TS repos | Not yet — see §11 |
 
-Testy złote realizują NFR-08 wprost: ten sam ślad ma dawać ten sam wynik,
-a każda zmiana liczb ma być widoczna w diffie pull requesta. To jest
-mechanizm, który łapie przesunięty raster i pomylone jednostki.
+## 1. Integration and branching
 
-Kontrola typografii brzmi jak fanaberia, ale dokumenty tego repozytorium mają
-już konsekwentny styl — cudzysłowy „ " i pauzy — i tanio go utrzymać
-automatem, zamiast poprawiać ręcznie po każdej sesji.
+Trunk-based development: `main` protected, linear history, branches that live
+hours or days rather than weeks. This is the practice with the strongest
+empirical backing in the DORA research, and its benefit is not team
+coordination — it is that small batches make failures easy to attribute, which
+matters as much alone as in a team.
 
-### 4. Identyfikatory ze specyfikacji
+Branch names carry the specification ID: `R2/sample-elevation-profile`.
+Agent sessions keep their `claude/` prefix. Squash merge, so `main` has one
+commit per unit of work and `git bisect` stays useful — which for a project
+whose failures are wrong numbers is a genuinely important property.
 
-Rzecz, która odróżnia ten harness od dowolnego szablonu z internetu.
+## 2. Commits
 
-- Commit niesie identyfikator w zakresie: `feat(R2): próbkowanie profilu`.
-- Issue i pull request mają pole `Realizuje:` z listą FR, NFR i UC.
-- Test, który sprawdza wymaganie, niesie je w markerze: `@wymaganie("FR-05")`.
-- `narzedzia/sprawdz_spec.py` sprawdza, że każdy przywołany identyfikator
-  istnieje w specyfikacji, i generuje `docs/pokrycie.md` — tabelę wymaganie
-  po wymaganiu z odesłaniem do testów, które je pokrywają. CI wywala się,
-  gdy tabela jest nieaktualna.
+Conventional Commits, English (ADR 0001), scope carries the ID:
 
-Efekt: na pytanie „ile z alphy jest zrobione" odpowiada wygenerowany plik,
-a nie wspomnienie. Przy okazji CHANGELOG pisze się prawie sam.
+```
+feat(R2): sample elevation profile from NMT
+fix(P1): correct descent speed on slopes above 25%
+```
 
-### 5. Proces
+The body may add `Implements: FR-05, UC-01`. This is what makes §10 and the
+changelog work without extra bookkeeping.
 
-**Gałęzie.** `main` chroniony, historia liniowa, merge przez squash.
-Gałęzie krótkie, nazwa od identyfikatora: `R2/probkowanie-profilu`.
-Sesje agenta trzymają swój prefiks `claude/`.
+## 3. Versioning and release
 
-**Commity.** Conventional Commits z polskim opisem. Zakres to identyfikator
-toru albo `repo`, `dane`, `docs`.
+SemVer within 0.x while there is no public API. Milestones map to versions:
+alpha is 0.1, beta is 0.2, live narration (S5) is 1.0.
 
-**Szablony issue** — formularze YAML, cztery rodzaje:
+**release-please** rather than Changesets or semantic-release. The comparison:
+semantic-release publishes automatically on every merge, which is right for a
+library on a fast cadence and wrong for a project where a release should be a
+deliberate act; Changesets is the strongest option for multi-package monorepos
+with independent versions, but it asks for a hand-written changeset file per
+PR, which is ceremony a single package does not need. release-please reads
+Conventional Commits, keeps an open release PR with the computed version and
+changelog, and releases when that PR is merged. Conventional Commits are
+already being adopted for other reasons, so this comes almost free.
 
-| Szablon | Wymusza pola |
+**Deployment: there is nothing to deploy for alpha.** The core is a library
+with a CLI and the product is a PDF. Publishing to a registry waits until
+somebody other than the author installs it. The mobile app (S5) gets its own
+plan when it has something to replay. Stated explicitly so the harness does
+not grow infrastructure on speculation.
+
+## 4. Decisions
+
+ADRs in `docs/decisions/`, numbered, MADR-shaped: context, decision,
+consequences, alternatives, and — added here — an explicit *when to reverse
+this* section. The specification already contains "Decyzja architektoniczna"
+blocks; new decisions land here instead of being buried in prose.
+
+The rule that gives ADRs their value: **a new dependency requires an ADR.**
+For a project whose core constraint is NFR-10 (no paid services) and whose
+correctness depends on a small number of well-chosen geospatial tools, the
+dependency list is the architecture.
+
+## 5. Issues and pull requests
+
+GitHub issue forms, four kinds:
+
+| Form | Required fields |
 |---|---|
-| Zadanie toru | Identyfikator, wymagania, use case'y, „gotowe, kiedy", sposób weryfikacji w terenie (NFR-06) |
-| Błąd | Trasa i dane wejściowe, wartość oczekiwana i otrzymana, wersja modelu |
-| Decyzja | Kontekst, warianty, wybór, konsekwencje — trafia do `docs/decyzje/` |
-| Ryzyko | Opis, moment rozstrzygnięcia, co zablokuje, jeśli się potwierdzi |
+| Track task | ID, requirements, use cases, "done when", field verification (NFR-06) |
+| Defect | Route and input data, expected vs actual value, model version |
+| Decision | Context, options, choice, consequences — becomes an ADR |
+| Risk | Description, when it must be settled, what it blocks if confirmed |
 
-**Szablon pull requesta** — lista kontrolna: identyfikator, testy, jawny układ
-współrzędnych i jednostki (NFR-07), determinizm wyniku (NFR-08), aktualne
-`docs/pokrycie.md`, wpis w CHANGELOG, brak nowej zależności bez ADR.
+PR template as a checklist: ID present, tests, CRS and units explicit (NFR-07),
+result deterministic (NFR-08), `docs/coverage.md` current, no new dependency
+without an ADR.
 
-**Etykiety** w `.github/labels.yml`, synchronizowane workflowem:
-`rdzen`, `tor:pieszy`, `tor:zaokno`, `kamien:alpha|beta|1.0`, `dane`,
-`wydajnosc`, `decyzja`, `ryzyko`.
+Labels in `.github/labels.yml`, synced by a workflow: `core`, `track:walking`,
+`track:zaokno`, `milestone:alpha|beta|1.0`, `data`, `performance`, `decision`,
+`risk`.
 
-### 6. Wersjonowanie, release, deployment
+## 6. Continuous integration
 
-**Wersjonowanie.** SemVer w paśmie 0.x, wersja trzymana w `pyproject.toml`.
-Kamienie milowe ze specyfikacji mapują się na wersje: alpha to 0.1,
-beta to 0.2, narracja na żywo (S5) to 1.0.
+GitHub Actions, free for public repositories (see D-04). Concurrency groups to
+cancel superseded runs, dependency caching, path filters so documentation-only
+changes skip the test matrix.
 
-**Release.** Tag `v0.1.0` uruchamia workflow, który buduje pakiet i wystawia
-GitHub Release z notatkami złożonymi przez `git-cliff` (MIT) z commitów,
-pogrupowanymi po identyfikatorach torów. CHANGELOG w formacie Keep a Changelog,
-po polsku, sekcja na wydanie.
-
-**Deployment.** Do wydania alpha nie ma czego wdrażać: rdzeń to biblioteka
-z interfejsem wiersza poleceń, a produktem jest karta w PDF. Publikacja
-na PyPI dopiero wtedy, gdy ktoś poza tobą będzie instalował. Aplikacja
-mobilna (S5) dostanie własny plan wtedy, kiedy będzie miała co odtwarzać.
-Zapisane wprost, żeby harness nie rósł na zapas.
-
-### 7. Harness dla Claude Code
-
-| Plik | Rola |
-|---|---|
-| `CLAUDE.md` | Czym jest projekt w dziesięciu zdaniach, gdzie leży specyfikacja, dyscyplina identyfikatorów, jak uruchomić testy, definicja ukończenia, rzeczy zakazane |
-| `.claude/settings.json` | Uprawnienia bez pytania na `uv run`, `pytest`, `ruff`, `git` w trybie odczytu; zmienne środowiskowe |
-| `.claude/hooks/session-start.sh` | Przygotowanie sesji webowej: `uv sync --frozen`, komunikat o braku GRASS-a. Cel: gotowość poniżej dwóch minut |
-| `.claude/commands/zadanie.md` | `/zadanie R2` — czyta specyfikację po identyfikatorze, zakłada issue, gałąź i plan |
-| `.claude/commands/pokrycie.md` | `/pokrycie` — przelicza `docs/pokrycie.md` |
-| `.claude/commands/karta.md` | `/karta` — puszcza pipeline na śladzie próbnym i pokazuje wynik |
-| `.claude/agents/recenzent-geo.md` | Subagent czytający diff wyłącznie pod kątem układów współrzędnych, jednostek, kierunku osi rastra i wysokości obserwatora |
-
-Rzeczy zakazane w `CLAUDE.md` warto wypisać wprost, bo wszystkie już padły
-w specyfikacji: żadnej płatnej usługi zewnętrznej, żadnego własnego
-raycastera zamiast `r.viewshed`, żadnego rozgałęzienia na tryb w rdzeniu
-(NFR-05), żadnej nowej zależności bez ADR, żadnej liczby pokazanej
-użytkownikowi bez źródła i założeń (FR-10).
-
-Subagent `recenzent-geo` to odpowiedź na trzecią cechę projektu z sekcji
-„Po co". Przegląd ogólny nie wyłapie, że ktoś policzył nachylenie
-na współrzędnych geograficznych zamiast na metrycznych — wyspecjalizowany,
-wąski przegląd wyłapie.
-
----
-
-## Etapy
-
-| Etap | Zakres | Gotowe, kiedy |
+| Check | Tool | When |
 |---|---|---|
-| E0 | Higiena: `.gitignore`, struktura, konwencje, licencja, etykiety | `git status` jest czysty na świeżym klonie, licencja zgodna w obu miejscach |
-| E1 | Środowisko: `pyproject.toml`, `uv.lock`, szkielet pakietu, jeden trywialny test, ruff i mypy | `uv sync && uv run pytest` przechodzi na czystej maszynie |
-| E2 | CI: workflow jakości i testów, ochrona `main` | Pull request nie da się scalić przy czerwonym biegu |
-| E3 | Proces: szablony issue i pull requesta, commity, wersjonowanie, CHANGELOG, `git-cliff` | Tag `v0.0.1` wystawia Release z notatkami wygenerowanymi z commitów |
-| E4 | Claude Code: `CLAUDE.md`, ustawienia, hook, komendy, subagent | Sesja z telefonu startuje i puszcza testy bez ręcznej konfiguracji |
-| E5 | Identyfikatory: `sprawdz_spec.py`, `docs/pokrycie.md` w CI | Wymyślony identyfikator w treści pull requesta wywala bieg |
-| E6 | Weryfikacja na R1 (wczytywanie GPX) | Zadanie przechodzi całą drogę: issue, gałąź, pull request, zielone CI, wydanie 0.0.2 — bez ręcznego dotykania konfiguracji |
+| Lint and format | ESLint + Prettier, or Biome | Every push |
+| Types | `tsc --noEmit`, strict | Every push |
+| Unit tests | Vitest, budget 60 s | Every push |
+| Golden-file tests | Vitest snapshots against `data/sample/expected/` | Every push |
+| Geospatial tool tests | GDAL, WhiteboxTools installed | Nightly and on label |
+| Traceability | `tools/check-spec.ts` | Every push |
+| Docs | Link check, markdown lint | Every push |
+| Performance | Benchmarks against NFR-01, NFR-02 | Nightly, non-blocking at first |
 
-E0–E2 to jeden wieczór. E3–E5 drugi. E6 jest miarą, nie formalnością.
+Required checks on `main`: lint, types, unit, golden, traceability. The
+geospatial and performance jobs are deliberately not required — a nightly
+signal that cannot block a merge is worth more than a slow required job that
+teaches you to ignore it.
 
-> **Test istnienia harnessu.** R1 jest zadaniem małym i nudnym — wczytać plik
-> i sprowadzić go do jednej reprezentacji (FR-01, FR-04). Jeśli przejście
-> całej drogi od issue do wydania zajmie na nim więcej czasu niż samo
-> napisanie kodu, harness jest za ciężki i trzeba go ściąć, zanim wejdzie
-> R2. Jeśli przejdzie gładko, ta sama droga uniesie R6.
+Actions pinned to commit SHAs, not tags, per OpenSSF Scorecard. Two minutes of
+work, removes a whole class of supply chain surprise.
+
+## 7. Testing strategy
+
+The standard pyramid is the wrong primary axis for a project whose output is
+numbers. Three layers that match the actual failure modes:
+
+**Unit tests** for pure logic — window arithmetic, side-of-vehicle
+determination, narration length fitting.
+
+**Golden-file tests** as the direct implementation of NFR-08. Reference
+inputs in `data/sample/`, expected outputs committed as JSON. Any change in
+computed numbers shows up as a reviewable diff in the PR. This is the single
+highest-value check in the whole harness: it is what catches the shifted
+raster and the swapped units, and it costs almost nothing once the fixtures
+exist.
+
+**Property-based tests** with `fast-check` for invariants that hold for all
+inputs: reprojection round-trips within tolerance, cumulative distance is
+monotonic, a viewshed from a point is symmetric in the sense the algorithm
+promises, visibility windows never have negative duration. This is the
+underused technique for exactly this class of bug, and it is cheap in
+TypeScript.
+
+Sample data: one short GPX, one clipped NMT tile of a few MB, one drive
+segment — committed, with `data/sample/SOURCES.md` recording provenance and
+licence for each. Large data via `tools/fetch-data.ts` with checksums, never
+in git. A CI check caps the size of `data/sample/`.
+
+## 8. Supply chain and dependencies
+
+Lockfile committed, `pnpm install --frozen-lockfile` in CI. Renovate grouped
+into one monthly PR — for a solo project, a per-dependency PR stream is noise
+that trains you to merge without looking. Node version pinned via `.nvmrc`
+and corepack.
+
+## 9. Documentation
+
+Diátaxis (tutorial, how-to, reference, explanation) is the right structure and
+the wrong amount of structure for four files. Adopt the vocabulary now, adopt
+the directory layout when `docs/` exceeds roughly a dozen files. What matters
+immediately is that the specification stays the single source of requirement
+truth and nothing duplicates it — §10 is how that is enforced.
+
+## 10. Requirement traceability
+
+The part no repository template will give you, and the highest-value item
+here after golden files.
+
+Traceability matrices come from safety-critical engineering — DO-178C,
+ISO 26262, IEC 62304 — where every requirement must be demonstrably covered by
+design and test. That discipline arrives with certification ceremony that
+would be absurd here. The idea underneath it is not absurd at all, and this
+project has already done the expensive half by writing the identifiers.
+
+Mechanism:
+
+- Commit scope carries the ID; body carries `Implements: FR-05, UC-01`.
+- Tests declare what they cover: `test('samples elevation from NMT',
+  { tag: 'FR-05' }, ...)`.
+- `tools/check-spec.ts` verifies that every referenced ID exists in the
+  specification, and regenerates `docs/coverage.md` — requirement by
+  requirement, with links to covering tests. CI fails when it is stale.
+
+"How much of alpha is done" is then answered by a generated file. A made-up ID
+in a PR body fails the build. The changelog groups itself by track.
+
+## 11. The Claude Code harness
+
+| File | Role |
+|---|---|
+| `CLAUDE.md` | The project in ten sentences, where the specification lives, the ID discipline, how to run tests, definition of done, the prohibitions |
+| `.claude/settings.json` | Pre-approved `pnpm`, `vitest`, `tsc`, read-only `git`; environment variables |
+| `.claude/hooks/session-start.sh` | Web session setup: `pnpm install --frozen-lockfile`, report missing GDAL or WhiteboxTools. Target: ready in under two minutes |
+| `.claude/commands/task.md` | `/task R2` — reads the spec by ID, opens issue, branch and plan |
+| `.claude/commands/coverage.md` | `/coverage` — regenerates `docs/coverage.md` |
+| `.claude/commands/card.md` | `/card` — runs the pipeline on the sample route and shows the result |
+| `.claude/agents/geo-reviewer.md` | Subagent reviewing diffs *only* for CRS, units, raster axis direction and observer height |
+
+The prohibitions are worth stating explicitly in `CLAUDE.md`, because every
+one of them already exists in the specification and every one is the kind of
+rule an agent will otherwise erode: no paid external service (NFR-10), no
+hand-written raycaster, no mode branching in the core (NFR-05), no new
+dependency without an ADR (§4), no in-process `proj4js` for coordinate
+transforms (ADR 0002, R-11), no number shown to a user without its source and
+model assumptions (FR-10).
+
+`geo-reviewer` is the direct answer to the third trait in "Why this project
+needs one". A general review will not notice that slope was computed on
+geographic coordinates instead of projected ones. A narrow review with one job
+will.
+
+`CLAUDE.md` must fit on a screen and link to documents rather than summarise
+them. A `CLAUDE.md` that restates the specification dilutes the parts that
+matter and goes stale — the failure mode is silent, because nobody re-reads it.
 
 ---
 
-## Decyzje do podjęcia
+## Stages
 
-**D-01 — Język w kodzie.** Domena jest polska i ma mocne własne słownictwo:
-zdarzenie widokowe, osnowa narracji, okno widoczności. Kod stoi na
-bibliotekach angielskich. Rekomendacja: identyfikatory w kodzie po angielsku,
-dokumentacja, commity i interfejs po polsku, a `docs/glosariusz.md` wiąże
-jedno z drugim. Wariant z polskimi identyfikatorami jest spójniejszy
-z domeną i gorszy w każdym miejscu styku z biblioteką.
+| Stage | Scope | Done when |
+|---|---|---|
+| E0 | Hygiene: `.gitignore`, layout, conventions, licence, labels, ADR 0001 executed | Fresh clone is clean; licence agrees with README |
+| E1 | Toolchain: `package.json`, lockfile, strict `tsconfig`, one trivial test, lint | `pnpm install && pnpm test` passes on a clean machine |
+| E2 | CI: lint, types, tests; branch protection | A red run cannot be merged |
+| E3 | Process: issue forms, PR template, Conventional Commits, release-please | Tag `v0.0.1` produces a Release with a generated changelog |
+| E4 | Claude Code: `CLAUDE.md`, settings, hook, commands, subagent | A phone session starts and runs tests with no manual setup |
+| E5 | Traceability: `check-spec.ts`, `docs/coverage.md` in CI | An invented ID in a PR body fails the build |
+| E6 | Prove it on R1 (GPX import) | Issue to release with no hand-editing of configuration |
 
-**D-02 — GRASS.** Rekomendacja z sekcji 2: interfejs z dwoma backendami
-i marker `grass`. Wariant alternatywny — obraz kontenera z GRASS-em jako
-jedyne środowisko — jest czystszy, ale kosztuje w sesji webowej i przy pracy
-z telefonu. Do rozstrzygnięcia przed E1, bo wpływa na `pyproject.toml`.
+E0–E2 is one evening; E3–E5 a second. E6 is a measurement, not a formality.
 
-**D-03 — Licencja.** MIT w pliku, „do ustalenia" w README. MIT jest
-bezpieczny: `r.viewshed` jest uruchamiany jako proces zewnętrzny, więc GPL
-GRASS-a nie przechodzi na kod projektu. Wymaga zapisania w ADR i utrzymania —
-wciągnięcie GPL-owej biblioteki przez import zmienia sytuację.
+> **Existence test for the harness.** R1 is small and dull — read a file,
+> reduce it to one representation (FR-01, FR-04). If walking it from issue to
+> release costs more than writing the code did, the harness is too heavy and
+> must be cut before R2 starts. If it goes smoothly, the same path will carry
+> R6.
 
-**D-04 — Repozytorium publiczne od zaraz.** Nie ma sekretów, a publiczne
-repozytorium ma darmowe Actions bez limitu minut. Rekomendacja: publiczne,
-z README mówiącym wprost, że kodu jeszcze nie ma.
+## Open decisions
 
-**D-05 — Zakres E6.** Czy pierwsze prawdziwe zadanie to R1, czy od razu R2
-(próbkowanie terenu, wymaga danych). Rekomendacja: R1, bo testuje harness,
-a nie dane.
+**D-01** — superseded by [ADR 0001](decisions/0001-language-of-the-repository.md).
+
+**D-02** — superseded by [ADR 0002](decisions/0002-technology-stack.md).
+
+**D-03 — Licence.** MIT in the file, "to be decided" in the README. MIT is
+safe: GDAL is MIT/X-style, WhiteboxTools is MIT, and GRASS is GPL but invoked
+as an external process, so its licence does not reach this code. Worth an ADR,
+because importing a GPL library in process would change the answer.
+
+**D-04 — Public repository now.** No secrets, and public repositories get
+unlimited free Actions minutes. Recommended: public, with a README that says
+plainly there is no code yet.
+
+**D-05 — First real task.** R1 rather than R2: it exercises the harness
+instead of the data.
+
+**D-06 — Package layout.** Single package until there is a second consumer of
+the core. When the mobile app arrives (S5), split into a pnpm workspace and
+revisit Turborepo then — not before, and not on speculation.
+
+## Deliberately skipped
+
+Docker as the default environment; PostGIS, per the specification, until file
+formats hurt; CODEOWNERS and review requirements; signed commits and DCO;
+an OS matrix in CI (Linux only, because that is where visibility is computed);
+any deployment infrastructure (§3); a Claude review workflow on pull requests
+until E6 shows there is something worth reviewing.
+
+## Risks
+
+**H-01 — Harness larger than the project.** The classic way never to write any
+code. Mitigated by a one-week budget, stages with standalone value, and the
+existence test on R1.
+
+**H-02 — False green without the geospatial tools.** The default run skips the
+tests that exercise the point of the project. Mitigated by the nightly job and
+by printing the skipped count in the run summary, so the gap is visible rather
+than comfortable.
+
+**H-03 — Specification drifting from code.** The largest threat to this
+repository's value, since today the whole project *is* the documents.
+Mitigated by E5: IDs checked by a program, not by good intentions.
+
+**H-04 — Sample data bloat.** Terrain models are heavy. Mitigated by a hard
+size cap on `data/sample/` enforced in CI, with everything else fetched by
+checksummed script.
+
+**H-05 — Remote session limits.** Phone work means a container with a network
+policy and a time limit. Mitigated by a start hook under two minutes, with
+heavy downloads and tool-dependent tests confined to CI.
+
+**H-06 — Conventions written for the agent rather than for a person.**
+Mitigated by the one-screen rule for `CLAUDE.md`.
+
+**H-07 — Hand-written numerics accumulating.** The cost accepted in ADR 0002.
+Mitigated by golden-file and property-based tests, and by the 2000-line
+threshold that triggers rewriting that ADR rather than patching it.
 
 ---
 
-## Czego świadomie nie robimy
+## Sources
 
-- Nie ma Dockera jako środowiska domyślnego — dopiero gdy D-02 wyjdzie inaczej.
-- Nie ma PostGIS, zgodnie ze specyfikacją: format plikowy do czasu, aż zacznie
-  przeszkadzać.
-- Nie ma automatycznego wersjonowania z bota ani wymuszonego podpisu commitów.
-  Jedna osoba w repozytorium.
-- Nie ma matrycy systemów operacyjnych w CI. Linux, bo tam liczy się widoczność.
-- Nie ma wdrożenia ani infrastruktury — patrz sekcja 6.
-- Nie ma workflow z recenzją Claude'a w pull requeście na starcie. Do rozważenia
-  po E6, kiedy będzie co recenzować.
-
----
-
-## Ryzyka harnessu
-
-**H-01 — Harness większy od projektu.** Klasyczny sposób na to, żeby nigdy nie
-napisać kodu. Mitygacja: budżet jednego tygodnia, etapy z osobną wartością
-i test istnienia harnessu na R1.
-
-**H-02 — Fałszywa zieleń bez GRASS-a.** Domyślny bieg pomija testy widoczności,
-czyli sedno projektu. Mitygacja: nocny bieg z GRASS-em i widoczna liczba
-pominiętych testów w podsumowaniu biegu.
-
-**H-03 — Rozjazd specyfikacji z kodem.** Największe zagrożenie dla wartości
-tego repozytorium, bo dziś cała treść projektu siedzi w dokumentach.
-Mitygacja: E5, czyli identyfikatory sprawdzane automatem, a nie dobrą wolą.
-
-**H-04 — Puchnięcie danych w git.** Model terenu waży. Mitygacja: twardy limit
-na `dane/probne/`, reszta przez skrypt z sumą kontrolną, kontrola rozmiaru
-w CI.
-
-**H-05 — Ograniczenia sesji zdalnej.** Praca z telefonu oznacza kontener
-z polityką sieci i limitem czasu. Mitygacja: hook startowy poniżej dwóch minut,
-ciężkie pobrania i bieg z GRASS-em wyłącznie w CI.
-
-**H-06 — Konwencje pisane dla agenta, nie dla człowieka.** `CLAUDE.md`, które
-powtarza całą specyfikację, rozmywa to, co ważne. Mitygacja: `CLAUDE.md`
-mieści się na ekranie i odsyła do dokumentów, zamiast je streszczać.
+- [Trunk Based Development](https://trunkbaseddevelopment.com/5-min-overview/) ·
+  [Atlassian on trunk-based development](https://www.atlassian.com/continuous-delivery/continuous-integration/trunk-based-development)
+- [OpenSSF Scorecard](https://scorecard.dev/) ·
+  [OpenSSF SCM Best Practices](https://best.openssf.org/SCM-BestPractices/)
+- [Release automation compared: semantic-release, release-please, Changesets](https://oleksiipopov.com/blog/npm-release-automation/)
+- [GDAL viewshed](https://gdal.org/en/stable/programs/gdal_raster_viewshed.html) ·
+  [WhiteboxTools](https://www.whiteboxgeo.com/geospatial-software/)
+- [proj4js](https://github.com/proj4js/proj4js) ·
+  [pyproj transformation grids](https://pyproj4.github.io/pyproj/stable/transformation_grids.html)
+- [Diátaxis](https://diataxis.fr/)

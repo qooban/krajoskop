@@ -35,7 +35,8 @@ To wynik rachunku na modelu terenu, nie wpis z listy atrakcji przy drodze.
 |---|---|
 | [docs/specyfikacja.md](docs/specyfikacja.md) | Persony, tryby, architektura, tory rozwoju, use case'y, wymagania, ryzyka |
 | [docs/research-rynkowy.md](docs/research-rynkowy.md) | Co już istnieje na rynku, gdzie jest luka, źródła |
-| [docs/harness.md](docs/harness.md) | Plan standardów pracy w repo i harnessu dla Claude Code |
+| [docs/harness.md](docs/harness.md) | Plan standardów pracy w repo i harnessu dla Claude Code (po angielsku) |
+| [docs/decisions/](docs/decisions/) | Decyzje architektoniczne (ADR). Otwarte: język repozytorium, stack |
 
 ## Stack
 
@@ -58,7 +59,8 @@ Wersja alpha specyfikacji. Kodu jeszcze nie ma.
 Kolejny krok: standardy pracy w repo i harness dla Claude Code — konwencje,
 szablony issue i pull requestów, zasady wersjonowania, release i deploymentu.
 Plan tego kroku leży w [docs/harness.md](docs/harness.md) i czeka
-na zatwierdzenie. Dopiero potem analiza techniczna i development.
+na zatwierdzenie, razem z dwiema decyzjami: językiem repozytorium (ADR 0001)
+i stackiem (ADR 0002). Dopiero potem analiza techniczna i development.
 
 ## Licencja
 

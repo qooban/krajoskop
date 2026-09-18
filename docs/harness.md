@@ -337,14 +337,26 @@ dependency list.
 rejects `===` between numbers and points at NFR-08. Computed distances and
 elevations are compared with a tolerance or not at all.
 
-**The release pull request needs a real token.** A pull request opened with
-the default `GITHUB_TOKEN` does not trigger other workflows, so CI never
-reports on it — and a required check that never reports blocks the merge
-forever. The release workflow therefore prefers a `RELEASE_PLEASE_TOKEN`
-secret (a fine-grained PAT with contents and pull-requests write) and falls
-back to `GITHUB_TOKEN`, where the release pull request has to be merged by an
-administrator. This is a known trap rather than a surprise; it is written down
-so the first release does not run into it.
+**The release pull request needs a real token, for two reasons.** First,
+repositories forbid Actions from creating pull requests unless that setting is
+enabled, and `GITHUB_TOKEN` is Actions — the first run failed on exactly this.
+Second, even with the setting on, a pull request opened by `GITHUB_TOKEN` does
+not trigger other workflows, so CI would never report on the release pull
+request, and a required check that never reports blocks the merge forever.
+
+So the release job is **gated on a `RELEASE_PLEASE_TOKEN` secret** (a
+fine-grained PAT with contents and pull-requests write) rather than left to
+fail on every push. Without it the job writes a warning and a job summary and
+passes. A prerequisite only a human can satisfy should be a visible notice,
+not a permanent red X — a repository where `main` is always red is a
+repository where nobody reads CI, which is H-02 arriving by a different road.
+
+**Versioning needed two corrections the defaults got wrong.**
+`include-component-in-tag` defaults to `true`, which would have produced tags
+like `krajoskop-v0.1.0` rather than the `v0.1.0` this plan specifies. And with
+no prior release, release-please proposes its default initial version of
+1.0.0 regardless of the pre-major settings, so `initial-version` is pinned to
+`0.0.1`. Both were caught by running it rather than by reading about it.
 
 **Labels are not deleted by the sync.** A label absent from `labels.json` is
 reported and left alone. Deleting it would strip it from whatever issue a

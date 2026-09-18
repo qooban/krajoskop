@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -13,19 +14,47 @@ jobs:
     name: Maintain the release pull request
     runs-on: ubuntu-latest
     steps:
-      # Keeps an open pull request carrying the next version and the generated
-      # changelog. Merging that pull request is what tags and publishes the
-      # release, so a release stays a deliberate act.
+      # release-please needs a personal access token, for two independent
+      # reasons, both of which bite on the first release rather than later:
       #
-      # RELEASE_PLEASE_TOKEN is a personal access token with contents and
-      # pull-requests write. It matters: a pull request opened with the default
-      # GITHUB_TOKEN does not trigger other workflows, so CI would never report
-      # on the release pull request, and a required check that never reports
-      # blocks the merge forever. With the fallback below the automation still
-      # works, but the release pull request has to be merged by an
-      # administrator. See docs/harness.md.
-      - uses: googleapis/release-please-action@0dfd8538845b8e92600d271a895a5372865d4062 # v5
+      #   1. GitHub repositories forbid Actions from creating pull requests
+      #      unless the setting is turned on, and the default GITHUB_TOKEN is
+      #      Actions.
+      #   2. Even with that setting on, a pull request opened by GITHUB_TOKEN
+      #      does not trigger other workflows. CI would never report on the
+      #      release pull request, and a required check that never reports
+      #      blocks the merge forever.
+      #
+      # So the job is gated on the secret existing rather than left to fail on
+      # every push to main. A prerequisite only a human can satisfy should be
+      # a visible notice, not a red X that teaches you to ignore red.
+      - id: token
+        name: Check for the release token
+        env:
+          RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+        run: |
+          if [ -n "$RELEASE_PLEASE_TOKEN" ]; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'available=false' >> "$GITHUB_OUTPUT"
+            echo '::warning title=Release automation is idle::RELEASE_PLEASE_TOKEN is not set, so no release pull request will be opened or updated.'
+            {
+              echo '## Release automation is idle'
+              echo
+              echo 'No release pull request will be opened or updated until a'
+              echo '`RELEASE_PLEASE_TOKEN` secret exists: a fine-grained personal'
+              echo 'access token on this repository with **contents: write** and'
+              echo '**pull requests: write**.'
+              echo
+              echo 'Everything else in the release setup is already in place, so'
+              echo 'adding the secret and re-running this workflow is all that is'
+              echo 'left. See `docs/harness.md`.'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - if: steps.token.outputs.available == 'true'
+        uses: googleapis/release-please-action@0dfd8538845b8e92600d271a895a5372865d4062 # v5
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}

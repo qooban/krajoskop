@@ -19,11 +19,11 @@ This file is a map, not a summary. Follow the links; they are the truth.
 
 ```bash
 pnpm install          # Node 22, pnpm version pinned in package.json
-pnpm check            # format, lint, types, tests — run before pushing
+pnpm check            # the whole gate: format, lint, types, tests,
+                      # traceability, links, action pinning — run before pushing
 pnpm test             # tests alone
 pnpm test:watch
-node tools/check-links.ts       # relative links in Markdown
-node tools/check-workflows.ts   # actions pinned to SHAs
+pnpm run coverage     # regenerate docs/coverage.md after adding a marker
 ```
 
 ## The three things that make this project different
@@ -37,7 +37,10 @@ and naming do. Put the unit in the identifier: `distanceM`, `elevationM`,
 
 **2. The specification is an identifier system, and it is load-bearing.**
 Commit scopes carry a track ID (`feat(R2): ...`); commit bodies carry
-`Implements: FR-05, UC-01`. Merges are squashed, so **the pull request title
+`Implements: FR-05, UC-01`. Source and tests carry the same markers
+(`Implements:` in `src/`, `Covers:` in `tests/`), and CI rejects an identifier
+the specification does not define — in code and in the pull request body
+alike. [docs/coverage.md](docs/coverage.md) is generated from them. Merges are squashed, so **the pull request title
 is the commit that lands on `main`** and the text release automation reads.
 CI rejects a malformed one.
 

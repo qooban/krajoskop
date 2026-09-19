@@ -53,6 +53,25 @@ feeds `docs/coverage.md`:
 Implements: FR-05, UC-01
 ```
 
+## Requirement markers
+
+Code says what it implements; tests say what they cover. A comment is enough:
+
+```ts
+/**
+ * Implements: FR-05, UC-01     // in src/
+ * Covers: FR-01                // in tests/
+ */
+```
+
+`tools/check-spec.ts` reads those, rejects identifiers the specification does
+not define, and regenerates [coverage.md](coverage.md). The same check runs
+against the pull request body, so `Implements:` there is verified too. Run
+`pnpm run coverage` after adding a marker; CI fails if the table is stale.
+
+A covered row records a claim, not proof. It means a file says it implements
+that requirement — not that the requirement is met.
+
 ## Definition of done
 
 A change is done when all of these hold:

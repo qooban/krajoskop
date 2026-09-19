@@ -16,7 +16,11 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test"
+    "check:spec": "node tools/check-spec.ts",
+    "check:links": "node tools/check-links.ts",
+    "check:workflows": "node tools/check-workflows.ts",
+    "coverage": "node tools/check-spec.ts --write",
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run check:spec && pnpm run check:links && pnpm run check:workflows"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

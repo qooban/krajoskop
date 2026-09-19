@@ -16,6 +16,10 @@
     "noUnusedParameters": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
+    // tools/ run under Node's native type stripping, which resolves the
+    // real file, so their imports must carry the .ts extension. Safe
+    // because this project never emits: noEmit is set below.
+    "allowImportingTsExtensions": true,
 
     "noEmit": true,
     "skipLibCheck": true,

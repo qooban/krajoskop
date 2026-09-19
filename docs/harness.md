@@ -1,6 +1,6 @@
 # Harness — plan
 
-**Status:** Accepted. E0–E4 done; E5 next.
+**Status:** Accepted. E0–E5 done; E6 is the last one.
 **Date:** September 2026
 **State of the repository:** README, two documents, two ADRs, LICENSE.
 No code, no configuration, no `.gitignore`.
@@ -229,11 +229,16 @@ project has already done the expensive half by writing the identifiers.
 Mechanism:
 
 - Commit scope carries the ID; body carries `Implements: FR-05, UC-01`.
-- Tests declare what they cover: `test('samples elevation from NMT',
-{ tag: 'FR-05' }, ...)`.
+- Code declares what it implements, and tests what they cover, with a comment
+  marker: `Implements: FR-05, UC-01` in `src/`, `Covers: FR-01` in `tests/`.
+  The plan originally proposed a Vitest `{ tag: ... }` option; a comment won
+  because it is runner-agnostic and works in source files too, which a test
+  option cannot.
 - `tools/check-spec.ts` verifies that every referenced ID exists in the
-  specification, and regenerates `docs/coverage.md` — requirement by
-  requirement, with links to covering tests. CI fails when it is stale.
+  specification, and regenerates `docs/coverage.md` — identifier by
+  identifier, with the files claiming each. CI fails when it is stale.
+- A pull request body is scanned the same way, so a made-up ID in
+  `Implements:` fails the build rather than reaching `main`.
 
 "How much of alpha is done" is then answered by a generated file. A made-up ID
 in a PR body fails the build. The changelog groups itself by track.
@@ -246,7 +251,7 @@ in a PR body fails the build. The changelog groups itself by track.
 | `.claude/settings.json`          | Pre-approves `pnpm install`, `pnpm run`, `pnpm exec`, `node tools/…` and read-only `git`. Deliberately **not** `pnpm add`: the dependency rule in §4 is enforced by the permission model rather than by memory |
 | `.claude/hooks/session-start.sh` | Web session setup: `pnpm install --frozen-lockfile`, report missing GDAL or WhiteboxTools. Target: ready in under two minutes                                                                                  |
 | `.claude/commands/task.md`       | `/task R2` — reads the spec by ID, opens issue, branch and plan                                                                                                                                                |
-| `.claude/commands/coverage.md`   | **Deferred to E5.** It would regenerate `docs/coverage.md`, which `tools/check-spec.ts` does not yet produce                                                                                                   |
+| `.claude/commands/coverage.md`   | `/coverage` — regenerates `docs/coverage.md`                                                                                                                                                                   |
 | `.claude/commands/card.md`       | **Deferred until R1 exists.** There is no pipeline to run on a sample route yet                                                                                                                                |
 | `.claude/agents/geo-reviewer.md` | Subagent reviewing diffs _only_ for CRS, units, raster axis direction and observer height                                                                                                                      |
 
@@ -278,7 +283,7 @@ matter and goes stale — the failure mode is silent, because nobody re-reads it
 | E2    | CI: lint, types, tests; branch protection                                      | **Done**, except branch protection, which is a repository setting — see below                        |
 | E3    | Process: issue forms, PR template, Conventional Commits, release-please        | **Done**, with one manual step: a `RELEASE_PLEASE_TOKEN` secret — see below                          |
 | E4    | Claude Code: `CLAUDE.md`, settings, hook, commands, subagent                   | **Done.** The hook provisions a clean clone in under 3 s and lint and tests run with no manual setup |
-| E5    | Traceability: `check-spec.ts`, `docs/coverage.md` in CI                        | An invented ID in a PR body fails the build                                                          |
+| E5    | Traceability: `check-spec.ts`, `docs/coverage.md` in CI                        | **Done.** An invented identifier fails the build, in code and in a pull request body                 |
 | E6    | Prove it on R1 (GPX import)                                                    | Issue to release with no hand-editing of configuration                                               |
 
 E0–E2 is one evening; E3–E5 a second. E6 is a measurement, not a formality.
@@ -374,11 +379,24 @@ file is undone on the next release. General rule: **generated files are not
 ours to format, and machine-authored titles still have to obey the
 convention.**
 
-**Two slash commands are deliberately absent.** `/coverage` and `/card` were
-in this plan's E4 list, and both would have been commands for things that do
-not exist — the traceability tool arrives in E5, and the pipeline needs R1.
-A command that errors is worse than an absent one: it reads as a broken
-harness rather than as unbuilt work.
+**A checker must not be tripped by its own description.** The first version
+of `check-spec.ts` matched `Implements:` and `Covers:` anywhere in a line, so
+the pull request introducing it — which described its own negative tests —
+failed CI on the examples in its prose. A claim is now a line that _begins_
+with the marker, allowing comment and list punctuation but not quotes,
+backticks or table pipes. The parsing moved into `tools/spec-claims.ts` so it
+could be tested, and the line that broke CI is now a test case. The general
+shape: a rule that scans text will eventually scan text _about_ the rule.
+
+**One slash command is still deliberately absent.** `/card` needs a pipeline
+that R1 has not built yet, and a command that errors reads as a broken harness
+rather than as unbuilt work. `/coverage` was absent for the same reason until
+E5 gave it something to run.
+
+**Coverage records claims, not proof.** A covered row means a file says it
+implements or covers that identifier. It does not mean the requirement is
+satisfied. Saying so in the generated file matters, because a table of green
+ticks invites exactly the wrong conclusion.
 
 **The permission list encodes a rule.** `pnpm add` is not pre-approved, so
 adding a dependency needs a human in the loop, which is what §4 asks for

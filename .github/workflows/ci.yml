@@ -41,6 +41,15 @@ jobs:
         run: pnpm run test
       - name: Workflow action pinning
         run: node tools/check-workflows.ts
+      - name: Traceability
+        run: node tools/check-spec.ts
+      # Claims made in the pull request body get the same scrutiny as claims
+      # made in code. Only pull_request events carry a body.
+      - name: Requirement IDs in the pull request body
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node tools/check-spec.ts
 
   docs:
     name: Documentation links

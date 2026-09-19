@@ -6,6 +6,7 @@
       "package-name": "krajoskop",
       "include-component-in-tag": false,
       "initial-version": "0.0.1",
+      "pull-request-title-pattern": "chore(repo): release ${version}",
       "changelog-path": "CHANGELOG.md",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,

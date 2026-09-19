@@ -362,6 +362,18 @@ no prior release, release-please proposes its default initial version of
 reported and left alone. Deleting it would strip it from whatever issue a
 human put it on, which is worse than a stale label nobody uses.
 
+**The release pull request had to be made to satisfy this repo's own rules.**
+Two things only showed up once a real release pull request existed. Its title
+was `chore(main): release 0.0.1`, and `main` is not a scope this repo allows,
+so the Conventional Commit check rejected it — fixed by setting
+`pull-request-title-pattern` rather than by widening the convention, because
+that title becomes a commit on `main`. And `CHANGELOG.md`, which
+release-please generates with `*` bullets where Prettier wants `-`, failed the
+format check; it is now in `.prettierignore`, since formatting a generated
+file is undone on the next release. General rule: **generated files are not
+ours to format, and machine-authored titles still have to obey the
+convention.**
+
 **Two slash commands are deliberately absent.** `/coverage` and `/card` were
 in this plan's E4 list, and both would have been commands for things that do
 not exist — the traceability tool arrives in E5, and the pipeline needs R1.

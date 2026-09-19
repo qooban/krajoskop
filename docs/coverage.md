@@ -9,7 +9,7 @@ A row is covered when some file carries `Implements:` or `Covers:` naming
 that ID. This records claims, not proof — a covered row means someone said
 so in code, not that the requirement is satisfied.
 
-**1 of 97 identifiers are claimed by something.**
+**4 of 97 identifiers are claimed by something.**
 
 ## Development tracks
 
@@ -66,10 +66,10 @@ so in code, not that the requirement is satisfied.
 
 | Requirement | Summary | Claimed by |
 | --- | --- | --- |
-| FR-01 | The system accepts a GPX file containing a track or a route; it handles tracks with and without timestamps. | `src/geo/distance.ts:30`<br>`src/geo/distance.ts:49`<br>`tests/geo/distance.test.ts:10` |
-| FR-02 | The system accepts a route exported from mapa-turystyczna.pl. | — |
-| FR-03 | The system accepts a driving route from Google Maps. | — |
-| FR-04 | Whatever the source, a route is reduced internally to a single representation. | — |
+| FR-01 | The system accepts a GPX file containing a track or a route; it handles tracks with and without timestamps. | `src/geo/distance.ts:30`<br>`src/geo/distance.ts:49`<br>`src/route/read.ts:4`<br>`src/route/read.ts:173`<br>`tests/geo/distance.test.ts:10`<br>`tests/route/read.test.ts:2` |
+| FR-02 | The system accepts a route exported from mapa-turystyczna.pl. | `src/route/read.ts:4`<br>`src/route/read.ts:173`<br>`tests/route/read.test.ts:2` |
+| FR-03 | The system accepts a driving route from Google Maps. | `src/route/read.ts:4`<br>`src/route/read.ts:190`<br>`tests/route/read.test.ts:2` |
+| FR-04 | Whatever the source, a route is reduced internally to a single representation. | `src/route/read.ts:4`<br>`src/route/types.ts:4`<br>`tests/route/read.test.ts:2` |
 | FR-05 | A point's elevation comes from the terrain model, not from the input file. | — |
 | FR-06 | Gradient is computed on the smoothed profile. | — |
 | FR-07 | Shading analysis accounts for occlusion by surrounding terrain, not only the orientation of the slope the o… | — |

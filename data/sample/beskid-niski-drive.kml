@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Przez Beskid Niski</name>
+    <Placemark>
+      <name>Przejazd</name>
+      <LineString>
+        <tessellate>1</tessellate>
+        <coordinates>
+          21.2841,49.5312,412 21.3105,49.5288,435 21.3402,49.5241,468 21.3688,49.5196,501
+        </coordinates>
+      </LineString>
+    </Placemark>
+  </Document>
+</kml>

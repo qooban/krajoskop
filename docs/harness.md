@@ -154,16 +154,16 @@ GitHub Actions, free for public repositories (see D-04). Concurrency groups to
 cancel superseded runs, dependency caching, path filters so documentation-only
 changes skip the test matrix.
 
-| Check                 | Tool                                             | When                           |
-| --------------------- | ------------------------------------------------ | ------------------------------ |
-| Lint and format       | ESLint (`strictTypeChecked`) + Prettier          | Every push                     |
-| Types                 | `tsc --noEmit`, strict                           | Every push                     |
-| Unit tests            | Vitest, budget 60 s                              | Every push                     |
-| Golden-file tests     | Vitest snapshots against `data/sample/expected/` | Every push                     |
-| Geospatial tool tests | GDAL, WhiteboxTools installed                    | Nightly and on label           |
-| Traceability          | `tools/check-spec.ts`                            | Every push                     |
-| Docs                  | Link check, markdown lint                        | Every push                     |
-| Performance           | Benchmarks against NFR-01, NFR-02                | Nightly, non-blocking at first |
+| Check                 | Tool                                                                                                    | When                           |
+| --------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| Lint and format       | ESLint (`strictTypeChecked`) + Prettier                                                                 | Every push                     |
+| Types                 | `tsc --noEmit`, strict                                                                                  | Every push                     |
+| Unit tests            | Vitest, budget 60 s                                                                                     | Every push                     |
+| Golden-file tests     | Explicit expected values in tests today; committed golden JSON once outputs grow past assertions, at R2 | Every push                     |
+| Geospatial tool tests | GDAL, WhiteboxTools installed                                                                           | Nightly and on label           |
+| Traceability          | `tools/check-spec.ts`                                                                                   | Every push                     |
+| Docs                  | Link check, markdown lint                                                                               | Every push                     |
+| Performance           | Benchmarks against NFR-01, NFR-02                                                                       | Nightly, non-blocking at first |
 
 Required checks on `main`: lint, types, unit, golden, traceability. The
 geospatial and performance jobs are deliberately not required — a nightly

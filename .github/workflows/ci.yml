@@ -43,6 +43,8 @@ jobs:
         run: node tools/check-workflows.ts
       - name: Traceability
         run: node tools/check-spec.ts
+      - name: Sample data size
+        run: node tools/check-sample-data.ts
       # Claims made in the pull request body get the same scrutiny as claims
       # made in code. Only pull_request events carry a body.
       - name: Requirement IDs in the pull request body

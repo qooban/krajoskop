@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Krajoskop sample" xmlns="http://www.topografix.com/GPX/1/1">
+  <rte>
+    <name>Polica planowana</name>
+    <rtept lat="49.6055" lon="19.6118"><ele>735.2</ele></rtept>
+    <rtept lat="49.6131" lon="19.6208"><ele>908.1</ele></rtept>
+    <rtept lat="49.6216" lon="19.6297"><ele>1186.9</ele></rtept>
+  </rte>
+</gpx>

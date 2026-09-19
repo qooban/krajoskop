@@ -3,12 +3,12 @@ description: Start work on a specification ID (R2, P1, S4)
 argument-hint: <track ID>
 ---
 
-Start work on track item **$1**.
+Start work on track item **$ARGUMENTS**.
 
 The specification is the source of truth — read it rather than inferring from
 the ID.
 
-1. Find `$1` in `docs/specification.md`, in the development tracks section.
+1. Find `$ARGUMENTS` in `docs/specification.md`, in the development tracks section.
    Report its scope and what it requires. If the ID does not exist, say so and
    stop; do not invent one.
 
@@ -23,7 +23,7 @@ the ID.
      as "settle before" a given track item.
 
 4. Propose, and wait for agreement before writing code:
-   - a branch name, `$1/<short-slug>`,
+   - a branch name, `$ARGUMENTS/<short-slug>`,
    - the "done when" condition, checkable rather than a feeling,
    - how it gets verified in the field (NFR-06), or an honest statement that
      it is plumbing and cannot be,

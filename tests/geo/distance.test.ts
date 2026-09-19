@@ -7,6 +7,8 @@ import {
 } from '../../src/geo/distance.js';
 
 /**
+ * Covers: FR-01
+ *
  * Expected values are derived analytically, not captured from this
  * implementation. On a sphere of radius R the meridian arc of one degree is
  * exactly R * pi / 180, and pole to pole is exactly R * pi. Checking the

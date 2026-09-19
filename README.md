@@ -40,6 +40,7 @@ of roadside attractions.
 | [docs/harness.md](docs/harness.md)                 | Working standards in the repository and the harness for Claude Code               |
 | [docs/conventions.md](docs/conventions.md)         | Commits, branches, code and documentation style                                   |
 | [docs/glossary.md](docs/glossary.md)               | Domain terms, Polish to English                                                   |
+| [docs/coverage.md](docs/coverage.md)               | Which identifiers the code claims, generated                                      |
 | [docs/decisions/](docs/decisions/)                 | Architecture decision records                                                     |
 
 ## Stack

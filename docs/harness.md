@@ -331,10 +331,26 @@ defensible at the start of a project and would not be at the end of one. The
 rule from here: a new check earns its place by catching something that has
 already gone wrong, not by sounding prudent.
 
-**Still unexercised:** `geo-reviewer`. The subagent built for changes touching
-coordinates and route geometry has never been run, including against R1, which
-is exactly its subject. Until it has been, it is an untested part of the
-harness.
+**`geo-reviewer` earned its place on its first run.** Pointed at R1 after the
+merge, it found three defects that full CI, type-aware linting and 35 passing
+tests had all agreed were fine:
+
+- a single untimed point shifted every later timestamp onto the wrong
+  coordinate, losing the last one entirely;
+- the transposition guard could not fire for any Polish coordinate, because a
+  swapped latitude and longitude both stay inside their valid ranges — the
+  test asserted a case no exporter produces;
+- a paused recording or a second `trk` silently returned a fraction of the
+  route.
+
+It also read KML's `altitudeMode` correctly against the specification, and
+named the ambiguity in calling planimetric distance "distance along the
+route". All five are fixed, each with a regression test.
+
+Every one of them produced a plausible wrong number rather than an error,
+which is the failure mode this repository was built around and the one its
+other checks are worst at. A narrow reviewer with a single remit is now the
+part of the harness with the clearest evidence behind it.
 
 ## Open decisions
 

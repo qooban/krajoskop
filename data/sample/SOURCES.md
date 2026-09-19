@@ -8,6 +8,8 @@ live in git, and anything larger is fetched by script instead.
 | `polica-track.gpx` | GPX `trk` with elevations and timestamps | **Synthetic**, hand-written for this repository | Same as the repository (MIT) |
 | `polica-planned.gpx` | GPX `rte`, no timestamps | **Synthetic** | MIT |
 | `beskid-niski-drive.kml` | KML in the shape Google My Maps exports | **Synthetic** | MIT |
+| `beskid-niski-absolute.kml` | The same drive, declaring `altitudeMode` `absolute` | **Synthetic** | MIT |
+| `polica-paused.gpx` | A paused recording: two `trkseg`s, first fix untimed | **Synthetic** | MIT |
 
 ## These are not real exports, and that matters
 

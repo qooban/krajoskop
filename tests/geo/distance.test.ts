@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  cumulativeDistanceM,
+  cumulativeGroundDistanceM,
   EARTH_RADIUS_M,
   haversineDistanceM,
   type PointWgs84,
@@ -90,9 +90,9 @@ describe('haversineDistanceM', () => {
   });
 });
 
-describe('cumulativeDistanceM', () => {
+describe('cumulativeGroundDistanceM', () => {
   it('returns an empty array for no points', () => {
-    expect(cumulativeDistanceM([])).toEqual([]);
+    expect(cumulativeGroundDistanceM([])).toEqual([]);
   });
 
   it('starts at zero and has one entry per point', () => {
@@ -101,7 +101,7 @@ describe('cumulativeDistanceM', () => {
       { latDeg: 50, lonDeg: 20 },
       { latDeg: 51, lonDeg: 20 },
     ];
-    const cumulative = cumulativeDistanceM(points);
+    const cumulative = cumulativeGroundDistanceM(points);
 
     expect(cumulative).toHaveLength(points.length);
     expect(cumulative[0]).toBe(0);
@@ -114,7 +114,7 @@ describe('cumulativeDistanceM', () => {
       { latDeg: 49.1, lonDeg: 20.0 },
       { latDeg: 49.05, lonDeg: 19.8 },
     ];
-    const cumulative = cumulativeDistanceM(points);
+    const cumulative = cumulativeGroundDistanceM(points);
 
     for (let i = 1; i < cumulative.length; i += 1) {
       expect(cumulative[i]).toBeGreaterThanOrEqual(cumulative[i - 1] ?? 0);
@@ -122,7 +122,7 @@ describe('cumulativeDistanceM', () => {
   });
 
   it('accumulates two degrees of arc across three meridian points', () => {
-    const cumulative = cumulativeDistanceM([
+    const cumulative = cumulativeGroundDistanceM([
       { latDeg: 49, lonDeg: 20 },
       { latDeg: 50, lonDeg: 20 },
       { latDeg: 51, lonDeg: 20 },

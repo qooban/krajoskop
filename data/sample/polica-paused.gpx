@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  A recording paused and resumed, which splits the track into two segments,
+  and whose first fix carries no time — both of which real devices produce.
+-->
+<gpx version="1.1" creator="Krajoskop sample" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>Polica z przerwą</name>
+    <trkseg>
+      <trkpt lat="49.6055" lon="19.6118"><ele>735.2</ele></trkpt>
+      <trkpt lat="49.6092" lon="19.6164"><ele>812.7</ele><time>2026-09-19T05:26:30Z</time></trkpt>
+    </trkseg>
+    <trkseg>
+      <trkpt lat="49.6178" lon="19.6255"><ele>1043.6</ele><time>2026-09-19T06:08:45Z</time></trkpt>
+      <trkpt lat="49.6216" lon="19.6297"><ele>1186.9</ele><time>2026-09-19T06:33:20Z</time></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

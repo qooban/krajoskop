@@ -22,6 +22,7 @@
  */
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
+import { parseClaimLine, type ClaimVerb } from './spec-claims.ts';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const SPEC = join(ROOT, 'docs', 'specification.md');
@@ -29,15 +30,6 @@ const COVERAGE = join(ROOT, 'docs', 'coverage.md');
 
 /** Only code makes claims. Prose in docs/ mentions IDs constantly. */
 const SCANNED_DIRECTORIES = ['src', 'tests', 'tools'];
-
-/**
- * Order matters: NFR must be tried before FR, and R- before R<digit>, or the
- * shorter alternative wins and NFR-01 is read as the non-existent FR-01.
- */
-const ID_TOKEN = /\b(?:NFR-\d+|FR-\d+|UC-\d+|R-\d+|[RPS]\d+)\b/g;
-
-/** A claim that some code implements, or some test covers, requirements. */
-const CLAIM = /\b(Implements|Covers):\s*(.+)$/;
 
 type Kind = 'track' | 'useCase' | 'requirement' | 'risk';
 
@@ -49,7 +41,7 @@ interface Definition {
 
 interface Claim {
   readonly id: string;
-  readonly verb: 'Implements' | 'Covers';
+  readonly verb: ClaimVerb;
   readonly file: string;
   readonly line: number;
 }
@@ -119,11 +111,6 @@ async function findSourceFiles(directory: string): Promise<string[]> {
   return found;
 }
 
-/** Pulls ID tokens out of the text following a claim marker. */
-function idsIn(text: string): string[] {
-  return [...text.matchAll(ID_TOKEN)].map((m) => m[0]);
-}
-
 async function collectClaims(): Promise<Claim[]> {
   const claims: Claim[] = [];
 
@@ -131,13 +118,12 @@ async function collectClaims(): Promise<Claim[]> {
     for (const file of await findSourceFiles(join(ROOT, directory))) {
       const lines = (await readFile(file, 'utf8')).split('\n');
       for (const [index, line] of lines.entries()) {
-        const match = CLAIM.exec(line);
-        if (match === null) continue;
-        const verb = match[1] as 'Implements' | 'Covers';
-        for (const id of idsIn(match[2] ?? '')) {
+        const claim = parseClaimLine(line);
+        if (claim === undefined) continue;
+        for (const id of claim.ids) {
           claims.push({
             id,
-            verb,
+            verb: claim.verb,
             file: relative(ROOT, file),
             line: index + 1,
           });
@@ -237,12 +223,12 @@ for (const claim of claims) {
 const prBody = process.env['PR_BODY'];
 if (prBody !== undefined && prBody.trim() !== '') {
   for (const line of prBody.split('\n')) {
-    const match = CLAIM.exec(line);
-    if (match === null) continue;
-    for (const id of idsIn(match[2] ?? '')) {
+    const claim = parseClaimLine(line);
+    if (claim === undefined) continue;
+    for (const id of claim.ids) {
       if (!definitions.has(id)) {
         problems.push(
-          `pull request body  "${match[1] ?? ''}: ${id}" — no such identifier in the specification`,
+          `pull request body  "${claim.verb}: ${id}" — no such identifier in the specification`,
         );
       }
     }

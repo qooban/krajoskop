@@ -379,6 +379,15 @@ file is undone on the next release. General rule: **generated files are not
 ours to format, and machine-authored titles still have to obey the
 convention.**
 
+**A checker must not be tripped by its own description.** The first version
+of `check-spec.ts` matched `Implements:` and `Covers:` anywhere in a line, so
+the pull request introducing it — which described its own negative tests —
+failed CI on the examples in its prose. A claim is now a line that _begins_
+with the marker, allowing comment and list punctuation but not quotes,
+backticks or table pipes. The parsing moved into `tools/spec-claims.ts` so it
+could be tested, and the line that broke CI is now a test case. The general
+shape: a rule that scans text will eventually scan text _about_ the rule.
+
 **One slash command is still deliberately absent.** `/card` needs a pipeline
 that R1 has not built yet, and a command that errors reads as a broken harness
 rather than as unbuilt work. `/coverage` was absent for the same reason until

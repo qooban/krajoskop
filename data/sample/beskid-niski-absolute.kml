@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The same drive declared with absolute altitude, where KML's third
+  coordinate really is metres above sea level.
+-->
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Przez Beskid Niski (absolute)</name>
+    <Placemark>
+      <name>Przejazd</name>
+      <LineString>
+        <altitudeMode>absolute</altitudeMode>
+        <coordinates>
+          21.2841,49.5312,412 21.3105,49.5288,435 21.3402,49.5241,468 21.3688,49.5196,501
+        </coordinates>
+      </LineString>
+    </Placemark>
+  </Document>
+</kml>

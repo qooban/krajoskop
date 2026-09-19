@@ -15,6 +15,8 @@ const sample = (name: string): string =>
 const TRACK = sample('polica-track.gpx');
 const PLANNED = sample('polica-planned.gpx');
 const DRIVE = sample('beskid-niski-drive.kml');
+const DRIVE_ABSOLUTE = sample('beskid-niski-absolute.kml');
+const PAUSED = sample('polica-paused.gpx');
 
 describe('readGpx', () => {
   it('reads a recorded track with timestamps', () => {
@@ -60,13 +62,13 @@ describe('readGpx', () => {
 
   it('computes cumulative distance from zero, monotonically', () => {
     const route = readGpx(TRACK);
-    const distances = route.points.map((p) => p.cumulativeDistanceM);
+    const distances = route.points.map((p) => p.cumulativeGroundDistanceM);
 
     expect(distances[0]).toBe(0);
     for (let i = 1; i < distances.length; i += 1) {
       expect(distances[i]).toBeGreaterThan(distances[i - 1] ?? 0);
     }
-    expect(route.totalDistanceM).toBe(distances[distances.length - 1]);
+    expect(route.totalGroundDistanceM).toBe(distances[distances.length - 1]);
   });
 
   it('puts the total distance in a plausible range for this ascent', () => {
@@ -75,8 +77,8 @@ describe('readGpx', () => {
     // far outside this band, which is the point of asserting it.
     const route = readGpx(TRACK);
 
-    expect(route.totalDistanceM).toBeGreaterThan(2_000);
-    expect(route.totalDistanceM).toBeLessThan(3_500);
+    expect(route.totalGroundDistanceM).toBeGreaterThan(2_000);
+    expect(route.totalGroundDistanceM).toBeLessThan(3_500);
   });
 });
 
@@ -88,7 +90,8 @@ describe('readKml', () => {
     expect(route.kind).toBe('planned');
     expect(route.points).toHaveLength(4);
     expect(route.points[0]?.pointWgs84.latDeg).toBeCloseTo(49.5312, 4);
-    expect(route.points[0]?.elevationFromFileM).toBe(412);
+    // Elevation is deliberately absent here; see the altitudeMode suite.
+    expect(route.points[0]?.elevationFromFileM).toBeUndefined();
   });
 });
 
@@ -137,5 +140,85 @@ describe('malformed input', () => {
       </LineString></Placemark></Document></kml>`;
 
     expect(() => readKml(transposed)).toThrow(/transposed|outside/i);
+  });
+});
+
+/**
+ * Everything below was found by the geo-reviewer subagent against the first
+ * version of this reader. Each case passed the original test suite while
+ * producing a wrong number, which is the failure mode this project is built
+ * around.
+ */
+describe('defects found in review', () => {
+  it('keeps a timestamp with its own point when an earlier one has none', () => {
+    // The converter exposes only the times that exist, as a "parallel" array
+    // that is one short. Trusting it stamped every point with its
+    // predecessor's time and dropped the last one entirely.
+    const route = readGpx(PAUSED);
+
+    expect(route.points.map((p) => p.recordedAt)).toEqual([
+      undefined,
+      '2026-09-19T05:26:30Z',
+      '2026-09-19T06:08:45Z',
+      '2026-09-19T06:33:20Z',
+    ]);
+  });
+
+  it('reads every segment of a paused recording', () => {
+    // Two trksegs become a MultiLineString. Taking the first line returned
+    // half the route and no error.
+    const route = readGpx(PAUSED);
+
+    expect(route.points).toHaveLength(4);
+    expect(route.points[3]?.pointWgs84.latDeg).toBeCloseTo(49.6216, 4);
+  });
+
+  it('reads every track of a multi-track file', () => {
+    const twoTracks = `<?xml version="1.0"?>
+      <gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1">
+        <trk><name>A</name><trkseg>
+          <trkpt lat="49.6055" lon="19.6118"/><trkpt lat="49.6092" lon="19.6164"/>
+        </trkseg></trk>
+        <trk><name>B</name><trkseg>
+          <trkpt lat="49.6131" lon="19.6208"/><trkpt lat="49.6178" lon="19.6255"/>
+        </trkseg></trk>
+      </gpx>`;
+
+    expect(readGpx(twoTracks).points).toHaveLength(4);
+  });
+
+  it('catches a transposition that stays inside both valid ranges', () => {
+    // The original guard only checked -90..90. In Poland latitude is 49-55
+    // and longitude 14-25, so a swapped file passed every bound and came out
+    // 18% too long, 30 degrees of latitude from where it belongs.
+    const swapped = `<?xml version="1.0"?>
+      <kml xmlns="http://www.opengis.net/kml/2.2"><Document><Placemark><LineString>
+        <coordinates>49.6055,19.6118,735 49.6131,19.6208,908 49.6216,19.6297,1186</coordinates>
+      </LineString></Placemark></Document></kml>`;
+
+    expect(() => readKml(swapped)).toThrow(/transposed/i);
+  });
+
+  it('leaves a genuine route outside Poland alone', () => {
+    // The check must recognise transposition, not act as a geofence: the
+    // specification names Copernicus DEM as the fallback outside Poland.
+    const alps = `<?xml version="1.0"?>
+      <kml xmlns="http://www.opengis.net/kml/2.2"><Document><Placemark><LineString>
+        <coordinates>7.6586,45.9763,1620 7.6702,45.9801,1685</coordinates>
+      </LineString></Placemark></Document></kml>`;
+
+    expect(readKml(alps).points).toHaveLength(2);
+  });
+
+  it('ignores a KML altitude that the format says is not one', () => {
+    // clampToGround, the default and what My Maps emits, defines the third
+    // coordinate as ignored. Storing it hands FR-05 a filler to compare the
+    // terrain model against.
+    expect(readKml(DRIVE).points[0]?.elevationFromFileM).toBeUndefined();
+  });
+
+  it('keeps a KML altitude that is declared absolute', () => {
+    expect(readKml(DRIVE_ABSOLUTE).points[0]?.elevationFromFileM).toBe(412);
+    expect(readKml(DRIVE_ABSOLUTE).points[3]?.elevationFromFileM).toBe(501);
   });
 });

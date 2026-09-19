@@ -43,12 +43,20 @@ export function haversineDistanceM(a: PointWgs84, b: PointWgs84): number {
 }
 
 /**
- * Cumulative distance along a sequence of positions, in metres. The first
- * entry is always 0, so the result has the same length as the input.
+ * Cumulative ground distance along a sequence of positions, in metres. The
+ * first entry is always 0, so the result has the same length as the input.
+ *
+ * "Ground" is the load-bearing word: this is horizontal, planimetric distance
+ * and ignores elevation entirely. Slope distance is longer — on the sample
+ * ascent by about 2.4% overall and 3.7% on its steepest segment — so anything
+ * deriving walking time from this (P1) must add the climb itself, using
+ * elevations from the terrain model (FR-05).
  *
  * Implements: FR-01
  */
-export function cumulativeDistanceM(points: readonly PointWgs84[]): number[] {
+export function cumulativeGroundDistanceM(
+  points: readonly PointWgs84[],
+): number[] {
   const cumulative: number[] = [];
   let total = 0;
 

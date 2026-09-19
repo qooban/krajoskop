@@ -22,8 +22,14 @@ export type RouteKind = 'track' | 'planned';
 export interface RoutePoint {
   readonly pointWgs84: PointWgs84;
 
-  /** Distance from the start along the route, in metres. Starts at 0. */
-  readonly cumulativeDistanceM: number;
+  /**
+   * Horizontal distance from the start, in metres, starting at 0.
+   *
+   * Planimetric: it ignores elevation. The name says "ground" so that nothing
+   * downstream quietly treats it as distance walked, which is longer on any
+   * slope. Slope distance needs elevations from the terrain model (FR-05).
+   */
+  readonly cumulativeGroundDistanceM: number;
 
   /**
    * Elevation as stated by the input file, in metres.
@@ -51,8 +57,8 @@ export interface Route {
   readonly format: RouteFormat;
   readonly kind: RouteKind;
   readonly points: readonly RoutePoint[];
-  /** Length of the whole route in metres; 0 for a single-point route. */
-  readonly totalDistanceM: number;
+  /** Horizontal length of the whole route in metres; 0 for a single point. */
+  readonly totalGroundDistanceM: number;
 }
 
 /** Raised when input cannot be read, naming what was wrong with it. */

@@ -61,6 +61,13 @@ coordinate tuple, so the mapping has to pull it out deliberately and name it
 `elevationFromFileM`, per FR-05: elevation in the file is for comparison and
 is never the elevation of a point.
 
+**A limit found in use.** `togeojson` discards KML's `altitudeMode`, so the
+third coordinate arrives stripped of the thing that says whether it is an
+elevation at all. Under the default `clampToGround` it is defined to be
+ignored. The reader therefore reads `altitudeMode` from the document itself
+and only keeps an elevation declared `absolute` — delegation covers the
+geometry, not the semantics attached to it.
+
 **Unverified.** These packages are being trusted against real exports that
 have not been obtained yet. The fixtures committed with R1 are synthetic. FR-02
 and FR-03 remain structurally satisfied and empirically untested until a real

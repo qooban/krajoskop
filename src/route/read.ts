@@ -12,7 +12,7 @@
 import { gpx, kml } from '@tmcw/togeojson';
 import { DOMParser } from '@xmldom/xmldom';
 
-import { cumulativeDistanceM, type PointWgs84 } from '../geo/distance.ts';
+import { cumulativeGroundDistanceM, type PointWgs84 } from '../geo/distance.ts';
 import {
   RouteParseError,
   type Route,
@@ -46,6 +46,19 @@ interface ConvertedFeature {
   readonly properties?: Record<string, unknown> | null;
 }
 
+/**
+ * The pilot region from the specification, as a bounding box: Poland, give or
+ * take. Used only to recognise transposed coordinates — never to reject a
+ * route for being somewhere else, since Copernicus DEM is the stated fallback
+ * outside Poland.
+ */
+const PILOT_REGION = {
+  minLonDeg: 14,
+  maxLonDeg: 24.2,
+  minLatDeg: 49,
+  maxLatDeg: 54.9,
+} as const;
+
 function parseXml(text: string, format: RouteFormat): XmlDocument {
   if (text.trim() === '') {
     throw new RouteParseError(`The ${format.toUpperCase()} input is empty.`);
@@ -74,18 +87,33 @@ function parseXml(text: string, format: RouteFormat): XmlDocument {
   return document as XmlDocument;
 }
 
-function firstLineString(
+/**
+ * Every coordinate in the document, in order, from all line geometry.
+ *
+ * Taking only the first line loses data silently: a GPX with two `trk`
+ * elements, or a track paused and resumed (which becomes a MultiLineString),
+ * would return a fraction of the route and no error at all.
+ */
+function collectCoordinates(
   features: readonly ConvertedFeature[],
   format: RouteFormat,
-): ConvertedFeature {
-  const usable = features.find(
-    (feature) =>
-      feature.geometry?.type === 'LineString' &&
-      Array.isArray(feature.geometry.coordinates) &&
-      feature.geometry.coordinates.length > 0,
-  );
+): GeoJsonPosition[] {
+  const coordinates: GeoJsonPosition[] = [];
 
-  if (usable === undefined) {
+  for (const feature of features) {
+    const geometry = feature.geometry;
+    if (!Array.isArray(geometry?.coordinates)) continue;
+
+    if (geometry.type === 'LineString') {
+      coordinates.push(...(geometry.coordinates as GeoJsonPosition[]));
+    } else if (geometry.type === 'MultiLineString') {
+      for (const line of geometry.coordinates as GeoJsonPosition[][]) {
+        coordinates.push(...line);
+      }
+    }
+  }
+
+  if (coordinates.length === 0) {
     throw new RouteParseError(
       `The ${format.toUpperCase()} contains no route geometry: expected a ` +
         `line with at least one point, found ${String(features.length)} feature(s) ` +
@@ -93,14 +121,95 @@ function firstLineString(
     );
   }
 
-  return usable;
+  return coordinates;
 }
 
-function toRoutePoints(
-  coordinates: readonly GeoJsonPosition[],
-  times: readonly string[] | undefined,
-): RoutePoint[] {
-  const positions: PointWgs84[] = coordinates.map((coordinate, index) => {
+/**
+ * Timestamps for GPX points, read from the document in point order.
+ *
+ * Deliberately not taken from the converter's `coordinateProperties.times`:
+ * that array holds only the points that *had* a time, so a single untimed
+ * point — which real devices produce on the first fix and while paused —
+ * shifts every later timestamp onto the wrong coordinate, silently. Reading
+ * the elements themselves keeps position and time together by construction.
+ *
+ * Implements: FR-01
+ */
+function gpxTimesInPointOrder(document: XmlDocument): (string | undefined)[] {
+  const times: (string | undefined)[] = [];
+
+  for (const tagName of ['trkpt', 'rtept']) {
+    const elements = document.getElementsByTagName(tagName);
+    for (let index = 0; index < elements.length; index += 1) {
+      const element = elements[index];
+      // Mirror the converter's own validity rule, so the two stay in step.
+      const lat = Number(element?.getAttribute('lat'));
+      const lon = Number(element?.getAttribute('lon'));
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+
+      const time = element
+        ?.getElementsByTagName('time')[0]
+        ?.textContent?.trim();
+      times.push(time === undefined || time === '' ? undefined : time);
+    }
+  }
+
+  return times;
+}
+
+/**
+ * Whether a KML document's elevations mean anything.
+ *
+ * KML's third coordinate is an elevation only under `altitudeMode` of
+ * `absolute`. The default is `clampToGround`, where the value is defined to
+ * be ignored and the geometry lies on the terrain — Google My Maps emits
+ * exactly that. Storing such a number as an elevation would hand FR-05 a
+ * filler to compare the terrain model against.
+ */
+function kmlElevationsAreAbsolute(document: XmlDocument): boolean {
+  const modes: string[] = [];
+  for (const tagName of ['altitudeMode', 'gx:altitudeMode']) {
+    const elements = document.getElementsByTagName(tagName);
+    for (let index = 0; index < elements.length; index += 1) {
+      const mode = elements[index]?.textContent?.trim();
+      if (mode !== undefined && mode !== '') modes.push(mode);
+    }
+  }
+
+  return modes.length > 0 && modes.every((mode) => mode === 'absolute');
+}
+
+function isInPilotRegion(point: PointWgs84): boolean {
+  return (
+    point.lonDeg >= PILOT_REGION.minLonDeg &&
+    point.lonDeg <= PILOT_REGION.maxLonDeg &&
+    point.latDeg >= PILOT_REGION.minLatDeg &&
+    point.latDeg <= PILOT_REGION.maxLatDeg
+  );
+}
+
+/**
+ * Recognises latitude and longitude that have been swapped.
+ *
+ * A range check cannot do this. In Poland latitude is 49–55 and longitude
+ * 14–25, so a swapped file has both values inside their valid ranges and
+ * passes every bound. What gives it away is that the route is nowhere near
+ * the pilot region as read, and squarely inside it when swapped.
+ *
+ * Deliberately not a geofence: a genuine route elsewhere is not inside Poland
+ * either way round, so it is untouched.
+ */
+function looksTransposed(points: readonly PointWgs84[]): boolean {
+  return (
+    points.every((point) => !isInPilotRegion(point)) &&
+    points.every((point) =>
+      isInPilotRegion({ latDeg: point.lonDeg, lonDeg: point.latDeg }),
+    )
+  );
+}
+
+function toPositions(coordinates: readonly GeoJsonPosition[]): PointWgs84[] {
+  const positions = coordinates.map((coordinate, index) => {
     const [lonDeg, latDeg] = coordinate;
     if (!Number.isFinite(lonDeg) || !Number.isFinite(latDeg)) {
       throw new RouteParseError(
@@ -121,49 +230,65 @@ function toRoutePoints(
     return { latDeg, lonDeg };
   });
 
-  const cumulative = cumulativeDistanceM(positions);
+  if (looksTransposed(positions)) {
+    const first = positions[0];
+    throw new RouteParseError(
+      'Latitude and longitude look transposed: the route lies outside the ' +
+        'pilot region as read, and inside it when swapped. First point reads ' +
+        `${String(first?.latDeg)}N ${String(first?.lonDeg)}E, which swapped is ` +
+        `${String(first?.lonDeg)}N ${String(first?.latDeg)}E.`,
+    );
+  }
 
-  return positions.map((pointWgs84, index) => {
-    const elevation = coordinates[index]?.[2];
-    return {
-      pointWgs84,
-      cumulativeDistanceM: cumulative[index] ?? 0,
-      elevationFromFileM: typeof elevation === 'number' ? elevation : undefined,
-      recordedAt: times?.[index],
-    };
-  });
+  return positions;
 }
 
 function buildRoute(
-  feature: ConvertedFeature,
+  coordinates: readonly GeoJsonPosition[],
+  times: readonly (string | undefined)[] | undefined,
+  name: string | undefined,
   format: RouteFormat,
   kind: RouteKind,
+  elevationsAreMeaningful: boolean,
 ): Route {
-  const coordinates = feature.geometry?.coordinates as GeoJsonPosition[];
-  const properties = feature.properties ?? {};
+  const positions = toPositions(coordinates);
+  const cumulative = cumulativeGroundDistanceM(positions);
 
-  // GPX timestamps live here, not under the coordTimes of togeojson's earlier
-  // major version. ADR 0003.
-  const coordinateProperties = properties['coordinateProperties'];
-  const times =
-    typeof coordinateProperties === 'object' && coordinateProperties !== null
-      ? (coordinateProperties as { times?: unknown }).times
-      : undefined;
+  // A time list that is not exactly as long as the route cannot be aligned
+  // with it, and guessing would produce plausible wrong times.
+  const aligned = times !== undefined && times.length === positions.length;
 
-  const points = toRoutePoints(
-    coordinates,
-    Array.isArray(times) ? (times as string[]) : undefined,
-  );
-
-  const name = properties['name'];
+  const points: RoutePoint[] = positions.map((pointWgs84, index) => {
+    const elevation = coordinates[index]?.[2];
+    return {
+      pointWgs84,
+      cumulativeGroundDistanceM: cumulative[index] ?? 0,
+      elevationFromFileM:
+        elevationsAreMeaningful && typeof elevation === 'number'
+          ? elevation
+          : undefined,
+      recordedAt: aligned ? times[index] : undefined,
+    };
+  });
 
   return {
-    name: typeof name === 'string' && name !== '' ? name : undefined,
+    name,
     format,
     kind,
     points,
-    totalDistanceM: points[points.length - 1]?.cumulativeDistanceM ?? 0,
+    totalGroundDistanceM:
+      points[points.length - 1]?.cumulativeGroundDistanceM ?? 0,
   };
+}
+
+function featureName(
+  features: readonly ConvertedFeature[],
+): string | undefined {
+  for (const feature of features) {
+    const name = feature.properties?.['name'];
+    if (typeof name === 'string' && name !== '') return name;
+  }
+  return undefined;
 }
 
 /**
@@ -173,13 +298,29 @@ function buildRoute(
  * Implements: FR-01, FR-02
  */
 export function readGpx(text: string): Route {
-  const converted = gpx(parseXml(text, 'gpx')) as unknown as {
+  const document = parseXml(text, 'gpx');
+  const converted = gpx(document) as unknown as {
     features: ConvertedFeature[];
   };
-  const feature = firstLineString(converted.features, 'gpx');
+  const coordinates = collectCoordinates(converted.features, 'gpx');
+
   // togeojson marks which GPX element a feature came from.
-  const kind = feature.properties?.['_gpxType'] === 'rte' ? 'planned' : 'track';
-  return buildRoute(feature, 'gpx', kind);
+  const kind = converted.features.some(
+    (f) => f.properties?.['_gpxType'] === 'trk',
+  )
+    ? 'track'
+    : 'planned';
+
+  return buildRoute(
+    coordinates,
+    gpxTimesInPointOrder(document),
+    featureName(converted.features),
+    'gpx',
+    kind,
+    // GPX elevation is metres above the WGS84 ellipsoid or the geoid depending
+    // on the device, but it is always meant as an elevation.
+    true,
+  );
 }
 
 /**
@@ -190,11 +331,22 @@ export function readGpx(text: string): Route {
  * Implements: FR-03
  */
 export function readKml(text: string): Route {
-  const converted = kml(parseXml(text, 'kml')) as unknown as {
+  const document = parseXml(text, 'kml');
+  const converted = kml(document) as unknown as {
     features: ConvertedFeature[];
   };
-  const feature = firstLineString(converted.features, 'kml');
-  return buildRoute(feature, 'kml', 'planned');
+  const coordinates = collectCoordinates(converted.features, 'kml');
+
+  return buildRoute(
+    coordinates,
+    // Plain KML LineStrings carry no per-point time; gx:Track does, and is
+    // out of scope until a real export is seen to use it.
+    undefined,
+    featureName(converted.features),
+    'kml',
+    'planned',
+    kmlElevationsAreAbsolute(document),
+  );
 }
 
 /** Reads a route in whichever supported format it arrived in. */

@@ -1,6 +1,6 @@
 # Harness — plan
 
-**Status:** Accepted. E0–E3 done; E4 next.
+**Status:** Accepted. E0–E4 done; E5 next.
 **Date:** September 2026
 **State of the repository:** README, two documents, two ADRs, LICENSE.
 No code, no configuration, no `.gitignore`.
@@ -240,15 +240,15 @@ in a PR body fails the build. The changelog groups itself by track.
 
 ## 11. The Claude Code harness
 
-| File                             | Role                                                                                                                                   |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `CLAUDE.md`                      | The project in ten sentences, where the specification lives, the ID discipline, how to run tests, definition of done, the prohibitions |
-| `.claude/settings.json`          | Pre-approved `pnpm`, `vitest`, `tsc`, read-only `git`; environment variables                                                           |
-| `.claude/hooks/session-start.sh` | Web session setup: `pnpm install --frozen-lockfile`, report missing GDAL or WhiteboxTools. Target: ready in under two minutes          |
-| `.claude/commands/task.md`       | `/task R2` — reads the spec by ID, opens issue, branch and plan                                                                        |
-| `.claude/commands/coverage.md`   | `/coverage` — regenerates `docs/coverage.md`                                                                                           |
-| `.claude/commands/card.md`       | `/card` — runs the pipeline on the sample route and shows the result                                                                   |
-| `.claude/agents/geo-reviewer.md` | Subagent reviewing diffs _only_ for CRS, units, raster axis direction and observer height                                              |
+| File                             | Role                                                                                                                                                                                                           |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CLAUDE.md`                      | The project in ten sentences, where the specification lives, the ID discipline, how to run tests, definition of done, the prohibitions                                                                         |
+| `.claude/settings.json`          | Pre-approves `pnpm install`, `pnpm run`, `pnpm exec`, `node tools/…` and read-only `git`. Deliberately **not** `pnpm add`: the dependency rule in §4 is enforced by the permission model rather than by memory |
+| `.claude/hooks/session-start.sh` | Web session setup: `pnpm install --frozen-lockfile`, report missing GDAL or WhiteboxTools. Target: ready in under two minutes                                                                                  |
+| `.claude/commands/task.md`       | `/task R2` — reads the spec by ID, opens issue, branch and plan                                                                                                                                                |
+| `.claude/commands/coverage.md`   | **Deferred to E5.** It would regenerate `docs/coverage.md`, which `tools/check-spec.ts` does not yet produce                                                                                                   |
+| `.claude/commands/card.md`       | **Deferred until R1 exists.** There is no pipeline to run on a sample route yet                                                                                                                                |
+| `.claude/agents/geo-reviewer.md` | Subagent reviewing diffs _only_ for CRS, units, raster axis direction and observer height                                                                                                                      |
 
 The prohibitions are worth stating explicitly in `CLAUDE.md`, because every
 one of them already exists in the specification and every one is the kind of
@@ -271,15 +271,15 @@ matter and goes stale — the failure mode is silent, because nobody re-reads it
 
 ## Stages
 
-| Stage | Scope                                                                          | Done when                                                                     |
-| ----- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| E0    | Hygiene: `.gitignore`, layout, conventions, licence, labels, ADR 0001 executed | **Done.** Fresh clone is clean; licence agrees with README                    |
-| E1    | Toolchain: `package.json`, lockfile, strict `tsconfig`, first tests, lint      | **Done.** `pnpm install && pnpm check` passes on a clean machine              |
-| E2    | CI: lint, types, tests; branch protection                                      | **Done**, except branch protection, which is a repository setting — see below |
-| E3    | Process: issue forms, PR template, Conventional Commits, release-please        | **Done**, with one manual step: a `RELEASE_PLEASE_TOKEN` secret — see below   |
-| E4    | Claude Code: `CLAUDE.md`, settings, hook, commands, subagent                   | A phone session starts and runs tests with no manual setup                    |
-| E5    | Traceability: `check-spec.ts`, `docs/coverage.md` in CI                        | An invented ID in a PR body fails the build                                   |
-| E6    | Prove it on R1 (GPX import)                                                    | Issue to release with no hand-editing of configuration                        |
+| Stage | Scope                                                                          | Done when                                                                                            |
+| ----- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| E0    | Hygiene: `.gitignore`, layout, conventions, licence, labels, ADR 0001 executed | **Done.** Fresh clone is clean; licence agrees with README                                           |
+| E1    | Toolchain: `package.json`, lockfile, strict `tsconfig`, first tests, lint      | **Done.** `pnpm install && pnpm check` passes on a clean machine                                     |
+| E2    | CI: lint, types, tests; branch protection                                      | **Done**, except branch protection, which is a repository setting — see below                        |
+| E3    | Process: issue forms, PR template, Conventional Commits, release-please        | **Done**, with one manual step: a `RELEASE_PLEASE_TOKEN` secret — see below                          |
+| E4    | Claude Code: `CLAUDE.md`, settings, hook, commands, subagent                   | **Done.** The hook provisions a clean clone in under 3 s and lint and tests run with no manual setup |
+| E5    | Traceability: `check-spec.ts`, `docs/coverage.md` in CI                        | An invented ID in a PR body fails the build                                                          |
+| E6    | Prove it on R1 (GPX import)                                                    | Issue to release with no hand-editing of configuration                                               |
 
 E0–E2 is one evening; E3–E5 a second. E6 is a measurement, not a formality.
 
@@ -361,6 +361,16 @@ no prior release, release-please proposes its default initial version of
 **Labels are not deleted by the sync.** A label absent from `labels.json` is
 reported and left alone. Deleting it would strip it from whatever issue a
 human put it on, which is worse than a stale label nobody uses.
+
+**Two slash commands are deliberately absent.** `/coverage` and `/card` were
+in this plan's E4 list, and both would have been commands for things that do
+not exist — the traceability tool arrives in E5, and the pipeline needs R1.
+A command that errors is worse than an absent one: it reads as a broken
+harness rather than as unbuilt work.
+
+**The permission list encodes a rule.** `pnpm add` is not pre-approved, so
+adding a dependency needs a human in the loop, which is what §4 asks for
+anyway. Rules enforced by the mechanism outlive rules kept in a document.
 
 **Branch protection is not in the repository.** It is a GitHub setting and
 cannot be committed. Required checks to enable on `main` once the repository is

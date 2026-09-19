@@ -1,6 +1,6 @@
 # Harness — plan
 
-**Status:** Accepted. E0–E5 done; E6 is the last one.
+**Status:** Accepted and complete. E0–E6 done; the existence test passed.
 **Date:** September 2026
 **State of the repository:** README, two documents, two ADRs, LICENSE.
 No code, no configuration, no `.gitignore`.
@@ -284,7 +284,7 @@ matter and goes stale — the failure mode is silent, because nobody re-reads it
 | E3    | Process: issue forms, PR template, Conventional Commits, release-please        | **Done**, with one manual step: a `RELEASE_PLEASE_TOKEN` secret — see below                          |
 | E4    | Claude Code: `CLAUDE.md`, settings, hook, commands, subagent                   | **Done.** The hook provisions a clean clone in under 3 s and lint and tests run with no manual setup |
 | E5    | Traceability: `check-spec.ts`, `docs/coverage.md` in CI                        | **Done.** An invented identifier fails the build, in code and in a pull request body                 |
-| E6    | Prove it on R1 (GPX import)                                                    | Issue to release with no hand-editing of configuration                                               |
+| E6    | Prove it on R1 (GPX import)                                                    | **Done.** Issue #9 to release PR, no configuration hand-edited. Verdict below                        |
 
 E0–E2 is one evening; E3–E5 a second. E6 is a measurement, not a formality.
 
@@ -293,6 +293,48 @@ E0–E2 is one evening; E3–E5 a second. E6 is a measurement, not a formality.
 > release costs more than writing the code did, the harness is too heavy and
 > must be cut before R2 starts. If it goes smoothly, the same path will carry
 > R6.
+
+### Verdict
+
+**Passed. Keep the harness, and stop adding to it.**
+
+R1 went from issue #9 to the release pull request without a single
+configuration file being edited by hand. The split of the diff:
+
+|                                                     | Lines added |
+| --------------------------------------------------- | ----------- |
+| Product code, tests and fixtures                    | 471         |
+| Process: the ADR, plan upkeep, config               | 96          |
+| A tool added along the way (`check-sample-data.ts`) | 69          |
+
+Process was about a sixth of the change, or a quarter counting the new tool,
+which was optional scope rather than something R1 required. Comfortably under
+the bar the test sets.
+
+**What the harness actually earned.** The rule requiring an ADR before a
+dependency is the one that paid. It forced the numbers to be checked instead
+of assumed, and the assumption was wrong: `fast-xml-parser`, the obvious
+choice, brings six transitive packages where the alternative brings none. That
+changed the decision. Without the rule the obvious choice would have shipped,
+and nobody would ever have noticed what it dragged in. The strict lint rules
+also caught two defects that review would not have.
+
+**What it cost.** Two of the harness's own defects surfaced on first real use —
+`/task` used a `$1` placeholder this version does not substitute, and the plan
+claimed a CI size cap on `data/sample/` that did not exist. Both are fixed.
+Neither would have been found by reading the harness; both were found by using
+it, which is the entire argument for E6 being a stage rather than a formality.
+
+**The standing risk is H-01, and it has not gone away.** The repository now has
+six CI steps and five tools for one module of product code. That ratio is
+defensible at the start of a project and would not be at the end of one. The
+rule from here: a new check earns its place by catching something that has
+already gone wrong, not by sounding prudent.
+
+**Still unexercised:** `geo-reviewer`. The subagent built for changes touching
+coordinates and route geometry has never been run, including against R1, which
+is exactly its subject. Until it has been, it is an untested part of the
+harness.
 
 ## Open decisions
 
